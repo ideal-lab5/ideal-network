@@ -131,6 +131,21 @@ node-inspect = { package = "staging-node-inspect", git = "https://github.com/ide
 try-runtime-cli = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", optional = true }
 serde_json = { workspace = true, default-features = true }
 
+# Polkadot
+polkadot-cli = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", features = ["rococo-native"], branch = "tony/dev" }
+polkadot-primitives = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+xcm = { package = "staging-xcm", git = "https://github.com/ideal-lab5/polkadot-sdk.git", default-features = false, branch = "tony/dev" }
+
+# Cumulus
+cumulus-client-cli = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+cumulus-client-consensus-aura = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+cumulus-client-consensus-common = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+cumulus-client-service = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+cumulus-primitives-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+cumulus-primitives-parachain-inherent = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+cumulus-relay-chain-interface = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+color-print = "0.3.4"
+
 [dev-dependencies]
 sc-keystore = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
 sc-client-db = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }

@@ -94,7 +94,7 @@ pallet-example-tasks = { git = "https://github.com/ideal-lab5/polkadot-sdk.git",
 pallet-fast-unstake = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
 pallet-migrations = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
 pallet-nis = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-grandpa = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
+# pallet-grandpa = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
 pallet-im-online = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
 pallet-indices = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
 pallet-identity = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
@@ -149,6 +149,27 @@ pallet-tx-pause = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", bran
 pallet-safe-mode = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
 pallet-parameters = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
 
+# Polkadot
+pallet-xcm = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", default-features = false, branch = "tony/dev" }
+polkadot-parachain-primitives = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", default-features = false, branch = "tony/dev" }
+polkadot-runtime-common = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", default-features = false, branch = "tony/dev" }
+xcm = { package = "staging-xcm", git = "https://github.com/ideal-lab5/polkadot-sdk.git", default-features = false, branch = "tony/dev" }
+xcm-builder = { package = "staging-xcm-builder", git = "https://github.com/ideal-lab5/polkadot-sdk.git", default-features = false, branch = "tony/dev" }
+xcm-executor = { package = "staging-xcm-executor", git = "https://github.com/ideal-lab5/polkadot-sdk.git", default-features = false, branch = "tony/dev" }
+
+# Cumulus
+cumulus-pallet-aura-ext = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+# cumulus-pallet-dmp-queue = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+cumulus-pallet-parachain-system = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false, features = ["parameterized-consensus-hook"] }
+cumulus-pallet-session-benchmarking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+cumulus-pallet-xcm = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+cumulus-pallet-xcmp-queue = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+cumulus-primitives-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+cumulus-primitives-timestamp = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+cumulus-primitives-utility = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+pallet-collator-selection = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+parachain-info = { package = "staging-parachain-info", git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", optional = true }
 
@@ -196,7 +217,7 @@ std = [
 	"pallet-example-tasks/std",
 	"pallet-fast-unstake/std",
 	"pallet-glutton/std",
-	"pallet-grandpa/std",
+	# "pallet-grandpa/std",
 	"pallet-identity/std",
 	"pallet-im-online/std",
 	"pallet-indices/std",
@@ -302,7 +323,7 @@ runtime-benchmarks = [
 	"pallet-example-tasks/runtime-benchmarks",
 	"pallet-fast-unstake/runtime-benchmarks",
 	"pallet-glutton/runtime-benchmarks",
-	"pallet-grandpa/runtime-benchmarks",
+	# "pallet-grandpa/runtime-benchmarks",
 	"pallet-identity/runtime-benchmarks",
 	"pallet-im-online/runtime-benchmarks",
 	"pallet-indices/runtime-benchmarks",
@@ -381,7 +402,7 @@ try-runtime = [
 	"pallet-example-tasks/try-runtime",
 	"pallet-fast-unstake/try-runtime",
 	"pallet-glutton/try-runtime",
-	"pallet-grandpa/try-runtime",
+	# "pallet-grandpa/try-runtime",
 	"pallet-identity/try-runtime",
 	"pallet-im-online/try-runtime",
 	"pallet-indices/try-runtime",

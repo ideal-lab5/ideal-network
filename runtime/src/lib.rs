@@ -1475,16 +1475,16 @@ parameter_types! {
 	pub const MaxSetIdSessionEntries: u32 = BondingDuration::get() * SessionsPerEra::get();
 }
 
-impl pallet_grandpa::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type WeightInfo = ();
-	type MaxAuthorities = MaxAuthorities;
-	type MaxNominators = MaxNominators;
-	type MaxSetIdSessionEntries = MaxSetIdSessionEntries;
-	type KeyOwnerProof = <Historical as KeyOwnerProofSystem<(KeyTypeId, GrandpaId)>>::Proof;
-	type EquivocationReportSystem =
-		pallet_grandpa::EquivocationReportSystem<Self, Offences, Historical, ReportLongevity>;
-}
+// impl pallet_grandpa::Config for Runtime {
+// 	type RuntimeEvent = RuntimeEvent;
+// 	type WeightInfo = ();
+// 	type MaxAuthorities = MaxAuthorities;
+// 	type MaxNominators = MaxNominators;
+// 	type MaxSetIdSessionEntries = MaxSetIdSessionEntries;
+// 	type KeyOwnerProof = <Historical as KeyOwnerProofSystem<(KeyTypeId, GrandpaId)>>::Proof;
+// 	type EquivocationReportSystem =
+// 		pallet_grandpa::EquivocationReportSystem<Self, Offences, Historical, ReportLongevity>;
+// }
 
 parameter_types! {
 	// difference of 26 bytes on-chain for the registration and 9 bytes on-chain for the identity
@@ -2258,8 +2258,8 @@ mod runtime {
 	#[runtime::pallet_index(17)]
 	pub type TechnicalMembership = pallet_membership<Instance1>;
 
-	#[runtime::pallet_index(18)]
-	pub type Grandpa = pallet_grandpa;
+	// #[runtime::pallet_index(18)]
+	// pub type Grandpa = pallet_grandpa;
 
 	#[runtime::pallet_index(19)]
 	pub type Treasury = pallet_treasury;
@@ -2567,7 +2567,7 @@ mod benches {
 		[pallet_fast_unstake, FastUnstake]
 		[pallet_nis, Nis]
 		[pallet_parameters, Parameters]
-		[pallet_grandpa, Grandpa]
+		// [pallet_grandpa, Grandpa]
 		[pallet_identity, Identity]
 		[pallet_im_online, ImOnline]
 		[pallet_indices, Indices]
