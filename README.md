@@ -1,4 +1,4 @@
-# Ideal Network Node
+# Encryption to the Future Node
 
 This repository contains implementations of the ETF consensus mechanism and a substrate node that uses it.
 
