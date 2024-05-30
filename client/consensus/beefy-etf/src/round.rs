@@ -268,6 +268,7 @@ mod tests {
 
 		let validators = ValidatorSet::<AuthorityId>::new(
 			vec![Keyring::Alice.public(), Keyring::Bob.public(), Keyring::Charlie.public()],
+			vec![],
 			42,
 		)
 		.unwrap();
@@ -298,6 +299,7 @@ mod tests {
 				Keyring::Charlie.public(),
 				Keyring::Eve.public(),
 			],
+			vec![],
 			Default::default(),
 		)
 		.unwrap();
@@ -359,6 +361,7 @@ mod tests {
 
 		let validators = ValidatorSet::<AuthorityId>::new(
 			vec![Keyring::Alice.public(), Keyring::Bob.public(), Keyring::Charlie.public()],
+			vec![],
 			42,
 		)
 		.unwrap();
@@ -405,6 +408,7 @@ mod tests {
 
 		let validators = ValidatorSet::<AuthorityId>::new(
 			vec![Keyring::Alice.public(), Keyring::Bob.public(), Keyring::Charlie.public()],
+			vec![],
 			Default::default(),
 		)
 		.unwrap();
@@ -480,6 +484,7 @@ mod tests {
 
 		let validators = ValidatorSet::<AuthorityId>::new(
 			vec![Keyring::Alice.public(), Keyring::Bob.public()],
+			vec![],
 			Default::default(),
 		)
 		.unwrap();

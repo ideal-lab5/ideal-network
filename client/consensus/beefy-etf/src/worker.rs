@@ -1446,7 +1446,7 @@ pub(crate) mod tests {
 		assert_eq!(voting_target_with(&mut oracle, 0, 1), None);
 
 		let keys = &[Keyring::Alice];
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(keys), vec![], 0).unwrap();
 
 		oracle.add_session(Rounds::new(1, validator_set.clone()));
 
@@ -1480,7 +1480,7 @@ pub(crate) mod tests {
 	#[test]
 	fn test_oracle_accepted_interval() {
 		let keys = &[Keyring::Alice];
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(keys), vec![], 0).unwrap();
 
 		let header = Header::new(
 			1u32.into(),
@@ -1575,7 +1575,7 @@ pub(crate) mod tests {
 
 		let peers = &[Keyring::One, Keyring::Two];
 		let id = 42;
-		let validator_set = ValidatorSet::new(make_beefy_ids(peers), id).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(peers), vec![], id).unwrap();
 		header.digest_mut().push(DigestItem::Consensus(
 			BEEFY_ENGINE_ID,
 			ConsensusLog::<AuthorityId>::AuthoritiesChange(validator_set.clone()).encode(),
@@ -1589,7 +1589,7 @@ pub(crate) mod tests {
 	#[tokio::test]
 	async fn keystore_vs_validator_set() {
 		let keys = &[Keyring::Alice];
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(keys), vec![], 0).unwrap();
 		let mut net = BeefyTestNet::new(1);
 		let mut worker = create_beefy_worker(net.peer(0), &keys[0], 1, validator_set.clone());
 
@@ -1598,7 +1598,7 @@ pub(crate) mod tests {
 
 		// unknown `Bob` key
 		let keys = &[Keyring::Bob];
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(keys), vec![], 0).unwrap();
 		let err_msg = "no authority public key found in store".to_string();
 		let expected = Err(Error::Keystore(err_msg));
 		assert_eq!(verify_validator_set::<Block>(&1, &validator_set, &worker.key_store), expected);
@@ -1615,7 +1615,7 @@ pub(crate) mod tests {
 	#[tokio::test]
 	async fn should_finalize_correctly() {
 		let keys = [Keyring::Alice];
-		let validator_set = ValidatorSet::new(make_beefy_ids(&keys), 0).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(&keys), vec![], 0).unwrap();
 		let mut net = BeefyTestNet::new(1);
 		let backend = net.peer(0).client().as_backend();
 		let mut worker = create_beefy_worker(net.peer(0), &keys[0], 1, validator_set.clone());
@@ -1720,7 +1720,7 @@ pub(crate) mod tests {
 	#[tokio::test]
 	async fn should_init_session() {
 		let keys = &[Keyring::Alice, Keyring::Bob];
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(keys), vec![], 0).unwrap();
 		let mut net = BeefyTestNet::new(1);
 		let mut worker = create_beefy_worker(net.peer(0), &keys[0], 1, validator_set.clone());
 
@@ -1731,7 +1731,7 @@ pub(crate) mod tests {
 
 		// new validator set
 		let keys = &[Keyring::Bob];
-		let new_validator_set = ValidatorSet::new(make_beefy_ids(keys), 1).unwrap();
+		let new_validator_set = ValidatorSet::new(make_beefy_ids(keys), vec![], 1).unwrap();
 
 		worker.init_session_at(new_validator_set.clone(), 11);
 		// Since mandatory is not done for old rounds, we still get those.
@@ -1753,7 +1753,7 @@ pub(crate) mod tests {
 		let block_num = 1;
 		let set_id = 1;
 		let keys = [Keyring::Alice];
-		let validator_set = ValidatorSet::new(make_beefy_ids(&keys), set_id).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(&keys), vec![], set_id).unwrap();
 		// Alice votes on good MMR roots, equivocations are allowed/expected
 		let mut api_alice = TestApi::with_validator_set(&validator_set);
 		api_alice.allow_equivocations();

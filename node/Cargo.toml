@@ -26,6 +26,8 @@ futures = "0.3.28"
 serde_json = { workspace = true, default-features = true }
 
 # Local
+beefy = { package = "sc-consensus-beefy-etf", path = "../client/consensus/beefy-etf", features = ["bls-experimental"] }
+beefy-primitives = { package = "sp-consensus-beefy-etf", path = "../primitives/consensus/beefy-etf", features = ["bls-experimental"]}
 ideal-nw-runtime = { path = "../runtime" }
 
 # Substrate

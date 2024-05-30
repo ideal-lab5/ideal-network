@@ -257,7 +257,7 @@ pub struct ValidatorSet<AuthorityId> {
 #[cfg(not(feature =  "bls-experimental"))]
 impl<AuthorityId> ValidatorSet<AuthorityId> {
 	/// Return a validator set with the given validators and set id.
-	pub fn new<I>(validators: I, id: ValidatorSetId) -> Option<Self>
+	pub fn new<I>(validators: I, _commitments: I, id: ValidatorSetId) -> Option<Self>
 	where
 		I: IntoIterator<Item = AuthorityId>,
 	{

@@ -59,3 +59,67 @@ and run them with:
     --repeat 20 \
     --output /pallets/etf/src/weight.rs
 ```
+
+## WIP Parachain 
+
+https://docs.substrate.io/tutorials/build-a-parachain/prepare-a-local-relay-chain/
+
+https://docs.substrate.io/tutorials/build-a-parachain/connect-a-local-parachain/
+
+```sh
+./target/release/ideal-nw-node build-spec --disable-default-bootnode > plain-ideal-nw-chainspec.json
+```
+
+```sh
+./target/release/ideal-nw-node build-spec --chain plain-ideal-nw-chainspec.json --disable-default-bootnode --raw > raw-ideal-nw-chainspec.json
+```
+
+generate node keys
+```sh
+./target/release/polkadot key generate-node-key --base-path ./target/tmp/relay/alice
+```
+
+launch node 1
+```sh
+./target/release/polkadot \                                               
+--alice \
+--validator \
+--base-path ./target/tmp/relay/alice \
+--chain ./target/tmp/raw-local-chainspec.json \
+--port 30333 \
+--rpc-port 9944 \
+--insecure-validator-i-know-what-i-do
+```
+
+launch node 2
+```sh
+./target/release/polkadot \
+--bob \
+--validator \
+--base-path ./target/tmp/relay/bob \
+--chain ./target/tmp/raw-local-chainspec.json \
+--port 30334 \
+--rpc-port 9945 \
+--insecure-validator-i-know-what-i-do \
+--bootnodes /ip4/127.0.0.1/tcp/30333/p2p/[NODE-1-ID]
+```
+
+Copy Alice keys over from Relay to Parachain. (?)
+
+Launch Parachain
+```sh
+ ./target/release/ideal-nw-node \
+--alice \
+--collator \
+--force-authoring \
+--chain raw-ideal-nw-chainspec.json \
+--base-path ./target/tmp/ideal-nw/alice \
+--port 40333 \
+--rpc-port 8844 \
+-- \
+--execution wasm \
+--chain ../polkadot-sdk/target/tmp/raw-local-chainspec.json \
+--port 30343 \
+--rpc-port 9977 \
+--bootnodes /ip4/127.0.0.1/tcp/30333/p2p/[NODE-1-ID]
+```
