@@ -441,42 +441,47 @@ pub async fn start_parachain_node(
         )?;
 
         // BEEFY
-        let (_beefy_block_import, beefy_voter_links, _beefy_rpc_links) =
-            beefy::beefy_block_import_and_links(
-                block_import,
-                backend.clone(),
-                client.clone(),
-                prometheus_registry.clone(),
+        if true {
+            let (_beefy_block_import, beefy_voter_links, _beefy_rpc_links) =
+                beefy::beefy_block_import_and_links(
+                    block_import,
+                    backend.clone(),
+                    client.clone(),
+                    prometheus_registry.clone(),
+                );
+
+            // beefy is enabled if its notification service exists
+            let network_params = beefy::BeefyNetworkParams {
+                network: Arc::new(network.clone()),
+                sync: sync_service.clone(),
+                gossip_protocol_name: beefy_gossip_proto_name,
+                justifications_protocol_name: beefy_on_demand_justifications_handler
+                    .protocol_name(),
+                notification_service: beefy_notification_service,
+                _phantom: core::marker::PhantomData::<Block>,
+            };
+            let beefy_params = beefy::BeefyParams {
+                client: client.clone(),
+                backend,
+                payload_provider: beefy_primitives::mmr::MmrRootProvider::new(client.clone()),
+                runtime: client.clone(),
+                key_store: keystore,
+                network_params,
+                min_block_delta: 8,
+                prometheus_registry,
+                links: beefy_voter_links,
+                on_demand_justifications_handler: beefy_on_demand_justifications_handler,
+            };
+
+            let beefy_gadget = beefy::start_beefy_gadget::<_, _, _, _, _, _, _>(beefy_params);
+            // BEEFY is part of consensus, if it fails we'll bring the node down with it to make sure it
+            // is noticed.
+            task_manager.spawn_essential_handle().spawn_blocking(
+                "beefy-gadget",
+                None,
+                beefy_gadget,
             );
-
-        // beefy is enabled if its notification service exists
-        let network_params = beefy::BeefyNetworkParams {
-            network: Arc::new(network.clone()),
-            sync: sync_service.clone(),
-            gossip_protocol_name: beefy_gossip_proto_name,
-            justifications_protocol_name: beefy_on_demand_justifications_handler.protocol_name(),
-            notification_service: beefy_notification_service,
-            _phantom: core::marker::PhantomData::<Block>,
-        };
-        let beefy_params = beefy::BeefyParams {
-            client: client.clone(),
-            backend,
-            payload_provider: beefy_primitives::mmr::MmrRootProvider::new(client.clone()),
-            runtime: client.clone(),
-            key_store: keystore,
-            network_params,
-            min_block_delta: 8,
-            prometheus_registry,
-            links: beefy_voter_links,
-            on_demand_justifications_handler: beefy_on_demand_justifications_handler,
-        };
-
-        let beefy_gadget = beefy::start_beefy_gadget::<_, _, _, _, _, _, _>(beefy_params);
-        // BEEFY is part of consensus, if it fails we'll bring the node down with it to make sure it
-        // is noticed.
-        task_manager
-            .spawn_essential_handle()
-            .spawn_blocking("beefy-gadget", None, beefy_gadget);
+        }
 
         // /BEEFY
     }

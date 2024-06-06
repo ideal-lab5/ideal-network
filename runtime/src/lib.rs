@@ -264,7 +264,7 @@ construct_runtime!(
         AuraExt: cumulus_pallet_aura_ext = 24,
         Offences: pallet_offences = 25,
         Historical: pallet_session_historical = 26,
-        Indices: pallet_indices = 27,
+        // Indices: pallet_indices = 27,
 
         // XCM helpers.
         XcmpQueue: cumulus_pallet_xcmp_queue = 30,
