@@ -27,6 +27,7 @@ mod xcm_config;
 
 // Substrate and Polkadot dependencies
 use crate::Vec;
+use codec::Encode;
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
 use cumulus_primitives_core::{AggregateMessageOrigin, ParaId};
 use frame_support::{
@@ -34,16 +35,20 @@ use frame_support::{
     dispatch::DispatchClass,
     parameter_types,
     traits::{
-        ConstBool, ConstU32, ConstU64, ConstU8, EitherOfDiverse, KeyOwnerProofSystem,
-        TransformOrigin,
+        fungible::{
+            Balanced, Credit, HoldConsideration, ItemOf, NativeFromLeft, NativeOrWithId, UnionOf,
+        },
+        AsEnsureOriginWithArg, ConstBool, ConstU128, ConstU32, ConstU64, ConstU8, EitherOfDiverse,
+        KeyOwnerProofSystem, TransformOrigin,
     },
     weights::{ConstantMultiplier, Weight},
     PalletId,
 };
 use frame_system::{
     limits::{BlockLength, BlockWeights},
-    EnsureRoot,
+    EnsureRoot, EnsureSigned,
 };
+// use pallet_asset_conversion::{Ascending, Chain, WithFirstAsset};
 use pallet_xcm::{EnsureXcm, IsVoiceOfBody};
 use parachains_common::message_queue::{NarrowOriginToSibling, ParaIdToSibling};
 use polkadot_runtime_common::{
@@ -55,21 +60,27 @@ use sp_consensus_beefy_etf::{
     mmr::MmrLeafVersion,
 };
 use sp_core::crypto::KeyTypeId;
-use sp_runtime::traits::{Convert, Keccak256};
-use sp_runtime::Perbill;
+use sp_runtime::{
+    generic::{Era, SignedPayload},
+    traits::{Convert, Extrinsic as TraitExtrinsic, Keccak256, StaticLookup, Verify},
+    Perbill, SaturatedConversion,
+};
 use sp_version::RuntimeVersion;
 use xcm::latest::prelude::BodyId;
 
 // Local module imports
 use super::{
     weights::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight},
-    AccountId, Aura, Balance, Balances, Block, BlockNumber, CollatorSelection, Etf, Hash,
-    Historical, MessageQueue, MmrLeaf, Nonce, Offences, PalletInfo, ParachainSystem, PolkadotXcm,
-    Runtime, RuntimeCall, RuntimeEvent, RuntimeFreezeReason, RuntimeHoldReason, RuntimeOrigin,
-    RuntimeTask, Session, SessionKeys, System, UncheckedExtrinsic, WeightToFee, XcmpQueue,
-    AVERAGE_ON_INITIALIZE_RATIO, BLOCK_PROCESSING_VELOCITY, EXISTENTIAL_DEPOSIT, HOURS,
-    MAXIMUM_BLOCK_WEIGHT, MICROUNIT, NORMAL_DISPATCH_RATIO, RELAY_CHAIN_SLOT_DURATION_MILLIS,
-    SLOT_DURATION, UNINCLUDED_SEGMENT_CAPACITY, VERSION,
+    AccountId, AccountIndex, 
+    // Assets, 
+    Aura, Balance, Balances, Block, BlockNumber,
+    CollatorSelection, Etf, Hash, Historical, MessageQueue, MmrLeaf, Nonce, Offences,
+    PalletInfo, ParachainSystem, PolkadotXcm, Runtime, RuntimeCall, RuntimeEvent,
+    RuntimeFreezeReason, RuntimeHoldReason, RuntimeOrigin, RuntimeTask, Session, SessionKeys,
+    Signature, System, UncheckedExtrinsic, WeightToFee, XcmpQueue, AVERAGE_ON_INITIALIZE_RATIO,
+    BLOCK_PROCESSING_VELOCITY, EXISTENTIAL_DEPOSIT, HOURS, MAXIMUM_BLOCK_WEIGHT, MICROUNIT,
+    NORMAL_DISPATCH_RATIO, RELAY_CHAIN_SLOT_DURATION_MILLIS, SLOT_DURATION,
+    UNINCLUDED_SEGMENT_CAPACITY, UNIT, VERSION,
 };
 use xcm_config::{RelayLocation, XcmOriginToTransactDispatchOrigin};
 
@@ -135,6 +146,147 @@ impl frame_system::Config for Runtime {
     type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
+// parameter_types! {
+//     pub const AssetConversionPalletId: PalletId = PalletId(*b"py/ascon");
+//     pub const PoolSetupFee: Balance = 1 * DOLLARS; // should be more or equal to the existential deposit
+//     pub const MintMinLiquidity: Balance = 100;  // 100 is good enough when the main currency has 10-12 decimals.
+//     pub const LiquidityWithdrawalFee: Permill = Permill::from_percent(0);
+//     pub const Native: NativeOrWithId<u32> = NativeOrWithId::Native;
+// }
+
+// impl pallet_asset_conversion::Config for Runtime {
+//     type RuntimeEvent = RuntimeEvent;
+//     type Balance = u128;
+//     type HigherPrecisionBalance = sp_core::U256;
+//     type AssetKind = NativeOrWithId<u32>;
+//     type Assets = UnionOf<Balances, Assets, NativeFromLeft, NativeOrWithId<u32>, AccountId>;
+//     type PoolId = (Self::AssetKind, Self::AssetKind);
+//     type PoolLocator = Chain<
+//         WithFirstAsset<Native, AccountId, NativeOrWithId<u32>>,
+//         Ascending<AccountId, NativeOrWithId<u32>>,
+//     >;
+//     type PoolAssetId = <Self as pallet_assets::Config<Instance2>>::AssetId;
+//     type PoolAssets = PoolAssets;
+//     type PoolSetupFee = PoolSetupFee;
+//     type PoolSetupFeeAsset = Native;
+//     type PoolSetupFeeTarget = ResolveAssetTo<AssetConversionOrigin, Self::Assets>;
+//     type PalletId = AssetConversionPalletId;
+//     type LPFee = ConstU32<3>; // means 0.3%
+//     type LiquidityWithdrawalFee = LiquidityWithdrawalFee;
+//     type WeightInfo = pallet_asset_conversion::weights::SubstrateWeight<Runtime>;
+//     type MaxSwapPathLength = ConstU32<4>;
+//     type MintMinLiquidity = MintMinLiquidity;
+//     #[cfg(feature = "runtime-benchmarks")]
+//     type BenchmarkHelper = ();
+// }
+
+// parameter_types! {
+//     pub const AssetDeposit: Balance = 100 * UNIT;
+//     pub const ApprovalDeposit: Balance = 1 * UNIT;
+//     pub const StringLimit: u32 = 50;
+//     pub const MetadataDepositBase: Balance = 10 * UNIT;
+//     pub const MetadataDepositPerByte: Balance = 1 * UNIT;
+// }
+
+// impl pallet_assets::Config<Instance1> for Runtime {
+//     type RuntimeEvent = RuntimeEvent;
+//     type Balance = u128;
+//     type AssetId = u32;
+//     type AssetIdParameter = codec::Compact<u32>;
+//     type Currency = Balances;
+//     type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
+//     type ForceOrigin = EnsureRoot<AccountId>;
+//     type AssetDeposit = AssetDeposit;
+//     type AssetAccountDeposit = ConstU128<UNIT>;
+//     type MetadataDepositBase = MetadataDepositBase;
+//     type MetadataDepositPerByte = MetadataDepositPerByte;
+//     type ApprovalDeposit = ApprovalDeposit;
+//     type StringLimit = StringLimit;
+//     type Freezer = ();
+//     type Extra = ();
+//     type CallbackHandle = ();
+//     type WeightInfo = pallet_assets::weights::SubstrateWeight<Runtime>;
+//     type RemoveItemsLimit = ConstU32<1000>;
+//     #[cfg(feature = "runtime-benchmarks")]
+//     type BenchmarkHelper = ();
+// }
+
+// impl pallet_asset_conversion_tx_payment::Config for Runtime {
+//     type RuntimeEvent = RuntimeEvent;
+//     type Fungibles = Assets;
+//     type OnChargeAssetTransaction = pallet_asset_conversion_tx_payment::AssetConversionAdapter<
+//         Balances,
+//         AssetConversion,
+//         Native,
+//     >;
+// }
+
+// impl pallet_skip_feeless_payment::Config for Runtime {
+//     type RuntimeEvent = RuntimeEvent;
+// }
+
+impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
+where
+    RuntimeCall: From<LocalCall>,
+{
+    fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
+        call: RuntimeCall,
+        public: <Signature as Verify>::Signer,
+        account: AccountId,
+        nonce: Nonce,
+    ) -> Option<(
+        RuntimeCall,
+        <UncheckedExtrinsic as TraitExtrinsic>::SignaturePayload,
+    )> {
+        let tip = 0;
+        // take the biggest period possible.
+        let period = BlockHashCount::get()
+            .checked_next_power_of_two()
+            .map(|c| c / 2)
+            .unwrap_or(2) as u64;
+        let current_block = System::block_number()
+            .saturated_into::<u64>()
+            // The `System::block_number` is initialized with `n+1`,
+            // so the actual block number is `n`.
+            .saturating_sub(1);
+        let era = Era::mortal(period, current_block);
+        let extra = (
+            frame_system::CheckNonZeroSender::<Runtime>::new(),
+            frame_system::CheckSpecVersion::<Runtime>::new(),
+            frame_system::CheckTxVersion::<Runtime>::new(),
+            frame_system::CheckGenesis::<Runtime>::new(),
+            frame_system::CheckEra::<Runtime>::from(era),
+            frame_system::CheckNonce::<Runtime>::from(nonce),
+            frame_system::CheckWeight::<Runtime>::new(),
+            // TODO: Check this
+            pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(0),
+            // TODO: Check this
+            cumulus_primitives_storage_weight_reclaim::StorageWeightReclaim::<Runtime>::new(),
+            // pallet_skip_feeless_payment::SkipCheckIfFeeless::from(
+            //     pallet_asset_conversion_tx_payment::ChargeAssetTxPayment::<Runtime>::from(
+            //         tip, None,
+            //     ),
+            // ),
+            // TODO: Check this
+            frame_metadata_hash_extension::CheckMetadataHash::<Runtime>::new(false),
+        );
+        let raw_payload = SignedPayload::new(call, extra)
+            .map_err(|e| {
+                log::warn!("Unable to create signed payload: {:?}", e);
+            })
+            .ok()?;
+        let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
+        let address = <Runtime as frame_system::Config>::Lookup::unlookup(account);
+        let (call, extra, _) = raw_payload.deconstruct();
+        Some((call, (address, signature, extra)))
+    }
+}
+
+impl frame_system::offchain::SigningTypes for Runtime {
+    type Public = <Signature as Verify>::Signer;
+    type Signature = Signature;
+}
+
 impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime
 where
     RuntimeCall: From<C>,
@@ -142,6 +294,18 @@ where
     type Extrinsic = UncheckedExtrinsic;
     type OverarchingCall = RuntimeCall;
 }
+
+parameter_types! {
+    pub const IndexDeposit: Balance = 1 * UNIT;
+}
+
+// impl pallet_indices::Config for Runtime {
+//     type AccountIndex = AccountIndex;
+//     type Currency = Balances;
+//     type Deposit = IndexDeposit;
+//     type RuntimeEvent = RuntimeEvent;
+//     type WeightInfo = pallet_indices::weights::SubstrateWeight<Runtime>;
+// }
 
 impl pallet_timestamp::Config for Runtime {
     /// A timestamp: milliseconds since the unix epoch.
