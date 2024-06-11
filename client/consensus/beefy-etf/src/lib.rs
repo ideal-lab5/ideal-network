@@ -743,7 +743,9 @@ where
     let mut header = at_header.clone();
     loop {
         debug!(target: LOG_TARGET, "🥩 Looking for auth set change at block number: {:?}", *header.number());
-        if let Ok(Some(active)) = runtime.runtime_api().validator_set(header.hash()) {
+        let validator_set = runtime.runtime_api().validator_set(header.hash());
+        debug!(target: LOG_TARGET, "🥩 Found validator set: {:?}", validator_set);
+        if let Ok(Some(active)) = validator_set {
             return Ok(active);
         } else {
             match find_authorities_change::<B>(&header) {
