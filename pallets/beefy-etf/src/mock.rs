@@ -37,10 +37,10 @@ use sp_state_machine::BasicExternalities;
 use crate as pallet_beefy;
 
 #[cfg(feature = "bls-experimental")]
-pub use sp_consensus_beefy_etf::bls_crypto::AuthorityId as BeefyId;
+pub use sp_consensus_beefy_etf::bls_crypto::{AuthorityId as BeefyId, Public};
 
 #[cfg(not(feature = "bls-experimental"))]
-pub use sp_consensus_beefy_etf::ecdsa_crypto::AuthorityId as BeefyId;
+pub use sp_consensus_beefy_etf::ecdsa_crypto::{AuthorityId as BeefyId, Public};
 
 pub use sp_consensus_beefy_etf::{ConsensusLog, BEEFY_ENGINE_ID};
 

@@ -501,6 +501,11 @@ where
         I: Iterator<Item = (&'a T::AccountId, T::BeefyId)>,
     {
         let next_authorities = validators.map(|(_, k)| k).collect::<Vec<_>>();
+        let next_queued_authorities = queued_validators.map(|(_, k)| k).collect::<Vec<_>>();
+        log::debug!(target: LOG_TARGET, "[on_new_session] Validators: {:?}, Queued Validators: {:?}",
+            next_authorities.clone(),
+            next_queued_authorities.clone(),
+        );
         if next_authorities.len() as u32 > T::MaxAuthorities::get() {
             log::error!(
                 target: LOG_TARGET,
@@ -512,7 +517,6 @@ where
         let bounded_next_authorities =
             BoundedVec::<_, T::MaxAuthorities>::truncate_from(next_authorities);
 
-        let next_queued_authorities = queued_validators.map(|(_, k)| k).collect::<Vec<_>>();
         if next_queued_authorities.len() as u32 > T::MaxAuthorities::get() {
             log::error!(
                 target: LOG_TARGET,

@@ -8,13 +8,26 @@ use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public};
-use sp_runtime::traits::{IdentifyAccount, Verify};
+use sp_runtime::{
+    traits::{IdentifyAccount, Verify},
+    RuntimeAppPublic,
+};
 
+use ark_serialize::CanonicalSerialize;
+use ark_std::UniformRand;
+use etf_crypto_primitives::dpss::acss::DoubleSecret;
+use rand::rngs::OsRng;
+use w3f_bls::{DoublePublicKey, DoublePublicKeyScheme, EngineBLS, SerializableToBytes, TinyBLS377};
 /// Specialized `ChainSpec` for the normal parachain runtime.
 pub type ChainSpec = sc_service::GenericChainSpec<(), Extensions>;
 
 /// The default XCM version to set in genesis config.
 const SAFE_XCM_VERSION: u32 = xcm::prelude::XCM_VERSION;
+
+/// Helper function to generate a crypto pair from seed.
+pub fn get_pair_from_seed<TPublic: Public>(seed: &str) -> TPublic::Pair {
+    TPublic::Pair::from_string(&format!("//{}", seed), None).expect("static values are valid; qed")
+}
 
 /// Helper function to generate a crypto pair from seed
 pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
@@ -49,6 +62,10 @@ pub fn get_collator_keys_from_seed(seed: &str) -> AuraId {
     get_from_seed::<AuraId>(seed)
 }
 
+pub fn get_beefy_etf_keys_from_seed(seed: &str) -> BeefyId {
+    get_from_seed::<BeefyId>(seed)
+}
+
 /// Helper function to generate an account ID from seed
 pub fn get_account_id_from_seed<TPublic: Public>(seed: &str) -> AccountId
 where
@@ -60,14 +77,17 @@ where
 /// Generate the session keys from individual elements.
 ///
 /// The input must be a tuple of individual keys (a single arg for now since we have just one key).
-pub fn template_session_keys(keys: AuraId) -> runtime::SessionKeys {
-    runtime::SessionKeys { aura: keys }
+pub fn template_session_keys(aura_keys: AuraId, beefy_keys: BeefyId) -> runtime::SessionKeys {
+    runtime::SessionKeys {
+        aura: aura_keys,
+        beefy: beefy_keys,
+    }
 }
 
 pub fn development_config() -> ChainSpec {
     // Give your base currency a unit name and decimal places
     let mut properties = sc_chain_spec::Properties::new();
-    properties.insert("tokenSymbol".into(), "UNIT".into());
+    properties.insert("tokenSymbol".into(), "IDN".into());
     properties.insert("tokenDecimals".into(), 12.into());
     properties.insert("ss58Format".into(), 42.into());
 
@@ -76,7 +96,7 @@ pub fn development_config() -> ChainSpec {
         Extensions {
             relay_chain: "rococo-local".into(),
             // You MUST set this to the correct network!
-            para_id: 1000,
+            para_id: 2000,
         },
     )
     .with_name("Development")
@@ -88,10 +108,12 @@ pub fn development_config() -> ChainSpec {
             (
                 get_account_id_from_seed::<sr25519::Public>("Alice"),
                 get_collator_keys_from_seed("Alice"),
+                get_beefy_etf_keys_from_seed("Alice"),
             ),
             (
                 get_account_id_from_seed::<sr25519::Public>("Bob"),
                 get_collator_keys_from_seed("Bob"),
+                get_beefy_etf_keys_from_seed("Bob"),
             ),
         ],
         vec![
@@ -109,7 +131,7 @@ pub fn development_config() -> ChainSpec {
             get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
         ],
         get_account_id_from_seed::<sr25519::Public>("Alice"),
-        1000.into(),
+        2000.into(),
     ))
     .build()
 }
@@ -117,7 +139,7 @@ pub fn development_config() -> ChainSpec {
 pub fn local_testnet_config() -> ChainSpec {
     // Give your base currency a unit name and decimal places
     let mut properties = sc_chain_spec::Properties::new();
-    properties.insert("tokenSymbol".into(), "UNIT".into());
+    properties.insert("tokenSymbol".into(), "IDN".into());
     properties.insert("tokenDecimals".into(), 12.into());
     properties.insert("ss58Format".into(), 42.into());
 
@@ -127,7 +149,7 @@ pub fn local_testnet_config() -> ChainSpec {
         Extensions {
             relay_chain: "rococo-local".into(),
             // You MUST set this to the correct network!
-            para_id: 1000,
+            para_id: 2000,
         },
     )
     .with_name("Local Testnet")
@@ -139,10 +161,12 @@ pub fn local_testnet_config() -> ChainSpec {
             (
                 get_account_id_from_seed::<sr25519::Public>("Alice"),
                 get_collator_keys_from_seed("Alice"),
+                get_beefy_etf_keys_from_seed("Alice"),
             ),
             (
                 get_account_id_from_seed::<sr25519::Public>("Bob"),
                 get_collator_keys_from_seed("Bob"),
+                get_beefy_etf_keys_from_seed("Bob"),
             ),
         ],
         vec![
@@ -160,19 +184,85 @@ pub fn local_testnet_config() -> ChainSpec {
             get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
         ],
         get_account_id_from_seed::<sr25519::Public>("Alice"),
-        1000.into(),
+        2000.into(),
     ))
     .with_protocol_id("template-local")
     .with_properties(properties)
     .build()
 }
 
+/// Helper function to prepare initial secrets and resharing for ETF conensus
+/// return a vec of (authority id, resharing, pubkey commitment) along with ibe public key against the master secret
+pub fn etf_genesis<E: EngineBLS>(
+    initial_authorities: Vec<BeefyId>,
+    seeds: Vec<&str>,
+) -> (Vec<u8>, Vec<(BeefyId, Vec<u8>)>) {
+    let msk_prime = E::Scalar::rand(&mut OsRng);
+    let keypair = w3f_bls::KeypairVT::<E>::generate(&mut OsRng);
+    let msk: E::Scalar = keypair.secret.0;
+    let double_public: DoublePublicKey<E> = DoublePublicKey(
+        keypair.into_public_key_in_signature_group().0,
+        keypair.public.0,
+    );
+
+    let double_secret = DoubleSecret::<E>(msk, msk_prime);
+
+    let mut double_public_bytes = Vec::new();
+    double_public
+        .serialize_compressed(&mut double_public_bytes)
+        .unwrap();
+
+    let genesis_resharing = double_secret
+        .reshare(
+            &initial_authorities
+                .iter()
+                .map(|authority| {
+                    w3f_bls::single::PublicKey::<E>(
+                        w3f_bls::double::DoublePublicKey::<E>::from_bytes(&authority.to_raw_vec())
+                            .unwrap()
+                            .1,
+                    )
+                })
+                .collect::<Vec<_>>(),
+            initial_authorities.len() as u8, // threshold = full set of authorities for now
+            &mut OsRng,
+        )
+        .unwrap();
+
+    let resharings = initial_authorities
+        .iter()
+        .enumerate()
+        .map(|(idx, _)| {
+            let pok = &genesis_resharing[idx].1;
+            let mut bytes = Vec::new();
+            pok.serialize_compressed(&mut bytes).unwrap();
+
+            let seed = seeds[idx];
+            let test = get_pair_from_seed::<BeefyId>(seed);
+            let t = sp_core::bls::Pair::<TinyBLS377>::from(test);
+            let o = t
+                .acss_recover(&bytes, initial_authorities.len() as u8)
+                .expect("genesis shares should be well formatted");
+            let etf_id = BeefyId::from(o.public());
+            (etf_id, bytes)
+        })
+        .collect::<Vec<_>>();
+    (double_public_bytes, resharings)
+}
+
 fn testnet_genesis(
-    invulnerables: Vec<(AccountId, AuraId)>,
+    invulnerables: Vec<(AccountId, AuraId, BeefyId)>,
     endowed_accounts: Vec<AccountId>,
     root: AccountId,
     id: ParaId,
 ) -> serde_json::Value {
+    let (round_key, genesis_shares) = etf_genesis::<TinyBLS377>(
+        invulnerables
+            .iter()
+            .map(|x| x.2.clone())
+            .collect::<Vec<_>>(),
+        vec!["Alice", "Bob", "Charlie"],
+    );
     serde_json::json!({
         "balances": {
             "balances": endowed_accounts.iter().cloned().map(|k| (k, 1u64 << 60)).collect::<Vec<_>>(),
@@ -181,17 +271,17 @@ fn testnet_genesis(
             "parachainId": id,
         },
         "collatorSelection": {
-            "invulnerables": invulnerables.iter().cloned().map(|(acc, _)| acc).collect::<Vec<_>>(),
+            "invulnerables": invulnerables.iter().cloned().map(|(acc, _, _)| acc).collect::<Vec<_>>(),
             "candidacyBond": EXISTENTIAL_DEPOSIT * 16,
         },
         "session": {
             "keys": invulnerables
                 .into_iter()
-                .map(|(acc, aura)| {
+                .map(|(acc, aura, beefy_etf)| {
                     (
                         acc.clone(),                 // account id
                         acc,                         // validator id
-                        template_session_keys(aura), // session keys
+                        template_session_keys(aura, beefy_etf), // session keys
                     )
                 })
             .collect::<Vec<_>>(),
@@ -200,6 +290,10 @@ fn testnet_genesis(
             "safeXcmVersion": Some(SAFE_XCM_VERSION),
         },
         "sudo": { "key": Some(root) },
+        "etf": {
+            "genesisResharing": genesis_shares,
+            "roundPubkey": round_key,
+        },
         "beefy": {
             "authorities": Vec::<BeefyId>::new(),
             "genesisBlock": Some(1),

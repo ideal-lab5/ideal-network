@@ -16,15 +16,18 @@
 // limitations under the License.
 
 #[cfg(not(feature = "bls-experimental"))]
-use crate::ecdsa_crypto::AuthorityId;
+use crate::ecdsa_crypto::{AuthorityId, Pair, Public, Signature};
 #[cfg(feature = "bls-experimental")]
-use crate::{bls_crypto::AuthorityId, ecdsa_bls_crypto};
 use crate::{
-    ecdsa_crypto, AuthorityIdBound, BeefySignatureHasher, Commitment, EquivocationProof, Payload,
-    ValidatorSetId, VoteMessage,
+    bls_crypto::{AuthorityId, Pair, Public, Signature},
+    ecdsa_bls_crypto,
+};
+use crate::{
+    AuthorityIdBound, BeefySignatureHasher, Commitment, EquivocationProof, Payload, ValidatorSetId,
+    VoteMessage,
 };
 use sp_application_crypto::{AppCrypto, AppPair, RuntimeAppPublic, Wraps};
-use sp_core::{ecdsa, Pair};
+use sp_core::{ecdsa, Pair as TPair};
 use sp_runtime::traits::Hash;
 
 use codec::Encode;
@@ -63,6 +66,18 @@ where
     fn sign_with_hasher(&self, message: &[u8]) -> <Self as AppCrypto>::Signature {
         let hashed_message = <MsgHash as Hash>::hash(message).into();
         self.as_inner_ref().sign_prehashed(&hashed_message).into()
+    }
+}
+
+#[cfg(feature = "bls-experimental")]
+impl<MsgHash> BeefySignerAuthority<MsgHash> for <AuthorityId as AppCrypto>::Pair
+where
+    MsgHash: Hash,
+    <MsgHash as Hash>::Output: Into<[u8; 32]>,
+{
+    fn sign_with_hasher(&self, message: &[u8]) -> <Self as AppCrypto>::Signature {
+        let hashed_message = <MsgHash as Hash>::hash(message).into();
+        self.as_inner_ref().sign(&hashed_message).into()
     }
 }
 
@@ -117,25 +132,25 @@ where
 }
 
 lazy_static::lazy_static! {
-    static ref PRIVATE_KEYS: HashMap<Keyring<AuthorityId>, ecdsa_crypto::Pair> =
+    static ref PRIVATE_KEYS: HashMap<Keyring<AuthorityId>, Pair> =
         Keyring::iter().map(|i| (i.clone(), i.pair())).collect();
-    static ref PUBLIC_KEYS: HashMap<Keyring<AuthorityId>, ecdsa_crypto::Public> =
+    static ref PUBLIC_KEYS: HashMap<Keyring<AuthorityId>, Public> =
         PRIVATE_KEYS.iter().map(|(name, pair)| (name.clone(), sp_application_crypto::Pair::public(pair))).collect();
 }
 
-impl From<Keyring<AuthorityId>> for ecdsa_crypto::Pair {
+impl From<Keyring<AuthorityId>> for Pair {
     fn from(k: Keyring<AuthorityId>) -> Self {
         k.pair()
     }
 }
 
-impl From<Keyring<AuthorityId>> for ecdsa::Pair {
-    fn from(k: Keyring<AuthorityId>) -> Self {
-        k.pair().into()
-    }
-}
+// impl From<Keyring<AuthorityId>> for ecdsa::Pair {
+//     fn from(k: Keyring<AuthorityId>) -> Self {
+//         k.pair().into()
+//     }
+// }
 
-impl From<Keyring<AuthorityId>> for ecdsa_crypto::Public {
+impl From<Keyring<AuthorityId>> for Public {
     fn from(k: Keyring<AuthorityId>) -> Self {
         (*PUBLIC_KEYS).get(&k).cloned().unwrap()
     }
@@ -145,7 +160,7 @@ impl From<Keyring<AuthorityId>> for ecdsa_crypto::Public {
 pub fn generate_equivocation_proof(
     vote1: (u64, Payload, ValidatorSetId, &Keyring<AuthorityId>),
     vote2: (u64, Payload, ValidatorSetId, &Keyring<AuthorityId>),
-) -> EquivocationProof<u64, ecdsa_crypto::Public, ecdsa_crypto::Signature> {
+) -> EquivocationProof<u64, Public, Signature> {
     let signed_vote = |block_number: u64,
                        payload: Payload,
                        validator_set_id: ValidatorSetId,
