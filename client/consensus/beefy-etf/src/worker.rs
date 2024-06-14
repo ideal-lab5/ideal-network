@@ -944,15 +944,19 @@ where
             hash
         );
         if let Some(Some(validator_set)) = runtime_api.validator_set(hash).ok() {
+            log::debug!(target: LOG_TARGET, "🎲 [ETF] validator_set: {:?}", validator_set);
             if let Some(Some(pok_bytes)) = runtime_api.read_share(hash, id.clone()).ok() {
-                if let Ok(sig) =
-                    self.key_store
-                        .etf_sign(&id, &pok_bytes, &message, validator_set.len() as u8)
+                log::debug!(target: LOG_TARGET, "🎲 [ETF] pok_bytes: {:?}", pok_bytes);
+                match self
+                    .key_store
+                    .etf_sign(&id, &pok_bytes, &message, validator_set.len() as u8)
                 {
-                    return Some(sig);
+                    Ok(sig) => return Some(sig),
+                    Err(e) => log::debug!("🎲 [ETF] Error signing: {:?}", e),
                 }
             }
         }
+        log::debug!(target: LOG_TARGET, "🎲 [ETF] extract failed with id: {:?} and message: {:?}", id, message);
 
         None
     }
@@ -1277,7 +1281,6 @@ pub(crate) mod tests {
         TestApi,
         Arc<SyncingService<Block>>,
     > {
-		
         let keystore = create_beefy_keystore(key);
 
         let (to_rpc_justif_sender, from_voter_justif_stream) =
@@ -1518,9 +1521,9 @@ pub(crate) mod tests {
     #[test]
     fn test_oracle_accepted_interval() {
         let keys = &[Keyring::Alice];
-		#[cfg(feature = "bls-experimental")]
+        #[cfg(feature = "bls-experimental")]
         let validator_set = ValidatorSet::new(make_beefy_ids(keys), vec![], 0).unwrap();
-		#[cfg(not(feature = "bls-experimental"))]
+        #[cfg(not(feature = "bls-experimental"))]
         let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
 
         let header = Header::new(
@@ -1651,10 +1654,10 @@ pub(crate) mod tests {
         let peers = &[Keyring::One, Keyring::Two];
         let id = 42;
 
-		#[cfg(feature = "bls-experimental")]
+        #[cfg(feature = "bls-experimental")]
         let validator_set = ValidatorSet::new(make_beefy_ids(peers), vec![], id).unwrap();
-		#[cfg(not(feature = "bls-experimental"))]
-		let validator_set = ValidatorSet::new(make_beefy_ids(peers), id).unwrap();
+        #[cfg(not(feature = "bls-experimental"))]
+        let validator_set = ValidatorSet::new(make_beefy_ids(peers), id).unwrap();
 
         header.digest_mut().push(DigestItem::Consensus(
             BEEFY_ENGINE_ID,
@@ -1669,10 +1672,10 @@ pub(crate) mod tests {
     #[tokio::test]
     async fn keystore_vs_validator_set() {
         let keys = &[Keyring::Alice];
-		#[cfg(feature = "bls-experimental")]
+        #[cfg(feature = "bls-experimental")]
         let validator_set = ValidatorSet::new(make_beefy_ids(keys), vec![], 0).unwrap();
-		#[cfg(not(feature = "bls-experimental"))]
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+        #[cfg(not(feature = "bls-experimental"))]
+        let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
         let mut net = BeefyTestNet::new(1);
         let mut worker = create_beefy_worker(net.peer(0), &keys[0], 1, validator_set.clone());
 
@@ -1684,10 +1687,10 @@ pub(crate) mod tests {
 
         // unknown `Bob` key
         let keys = &[Keyring::Bob];
-		#[cfg(feature = "bls-experimental")]
+        #[cfg(feature = "bls-experimental")]
         let validator_set = ValidatorSet::new(make_beefy_ids(keys), vec![], 0).unwrap();
-		#[cfg(not(feature = "bls-experimental"))]
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+        #[cfg(not(feature = "bls-experimental"))]
+        let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
         let err_msg = "no authority public key found in store".to_string();
         let expected = Err(Error::Keystore(err_msg));
         assert_eq!(
@@ -1707,10 +1710,10 @@ pub(crate) mod tests {
     #[tokio::test]
     async fn should_finalize_correctly() {
         let keys = [Keyring::Alice];
-		#[cfg(feature = "bls-experimental")]
+        #[cfg(feature = "bls-experimental")]
         let validator_set = ValidatorSet::new(make_beefy_ids(&keys), vec![], 0).unwrap();
-		#[cfg(not(feature = "bls-experimental"))]
-		let validator_set = ValidatorSet::new(make_beefy_ids(&keys), 0).unwrap();
+        #[cfg(not(feature = "bls-experimental"))]
+        let validator_set = ValidatorSet::new(make_beefy_ids(&keys), 0).unwrap();
         let mut net = BeefyTestNet::new(1);
         let backend = net.peer(0).client().as_backend();
         let mut worker = create_beefy_worker(net.peer(0), &keys[0], 1, validator_set.clone());
@@ -1825,10 +1828,10 @@ pub(crate) mod tests {
     #[tokio::test]
     async fn should_init_session() {
         let keys = &[Keyring::Alice, Keyring::Bob];
-		#[cfg(feature = "bls-experimental")]
+        #[cfg(feature = "bls-experimental")]
         let validator_set = ValidatorSet::new(make_beefy_ids(keys), vec![], 0).unwrap();
-		#[cfg(not(feature = "bls-experimental"))]	
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+        #[cfg(not(feature = "bls-experimental"))]
+        let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
         let mut net = BeefyTestNet::new(1);
         let mut worker = create_beefy_worker(net.peer(0), &keys[0], 1, validator_set.clone());
 
@@ -1839,10 +1842,10 @@ pub(crate) mod tests {
 
         // new validator set
         let keys = &[Keyring::Bob];
-		#[cfg(feature = "bls-experimental")]
+        #[cfg(feature = "bls-experimental")]
         let new_validator_set = ValidatorSet::new(make_beefy_ids(keys), vec![], 1).unwrap();
-		#[cfg(not(feature = "bls-experimental"))]
-		let new_validator_set = ValidatorSet::new(make_beefy_ids(keys), 1).unwrap();
+        #[cfg(not(feature = "bls-experimental"))]
+        let new_validator_set = ValidatorSet::new(make_beefy_ids(keys), 1).unwrap();
 
         worker.init_session_at(new_validator_set.clone(), 11);
         // Since mandatory is not done for old rounds, we still get those.
@@ -1868,10 +1871,10 @@ pub(crate) mod tests {
         let block_num = 1;
         let set_id = 1;
         let keys = [Keyring::Alice];
-		#[cfg(feature = "bls-experimental")]
+        #[cfg(feature = "bls-experimental")]
         let validator_set = ValidatorSet::new(make_beefy_ids(&keys), vec![], set_id).unwrap();
-		#[cfg(not(feature = "bls-experimental"))]
-		let validator_set = ValidatorSet::new(make_beefy_ids(&keys), set_id).unwrap();
+        #[cfg(not(feature = "bls-experimental"))]
+        let validator_set = ValidatorSet::new(make_beefy_ids(&keys), set_id).unwrap();
         // Alice votes on good MMR roots, equivocations are allowed/expected
         let mut api_alice = TestApi::with_validator_set(&validator_set);
         api_alice.allow_equivocations();

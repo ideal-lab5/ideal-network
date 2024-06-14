@@ -184,6 +184,7 @@ pub mod pallet {
     #[pallet::genesis_build]
     impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
+            log::debug!(target: LOG_TARGET, "🎲 [ETF] Building genesis config for BEEFY ETF with authorities: {:?}", self.authorities);
             Pallet::<T>::initialize(&self.authorities)
                 // we panic here as runtime maintainers can simply reconfigure genesis and restart
                 // the chain easily
@@ -491,6 +492,7 @@ where
         I: Iterator<Item = (&'a T::AccountId, T::BeefyId)>,
     {
         let authorities = validators.map(|(_, k)| k).collect::<Vec<_>>();
+        log::debug!(target: LOG_TARGET, "🎲 [ETF] Genesis Authorities: {:?}", authorities);
         // we panic here as runtime maintainers can simply reconfigure genesis and restart the
         // chain easily
         Self::initialize(&authorities).expect("Authorities vec too big");
@@ -502,7 +504,7 @@ where
     {
         let next_authorities = validators.map(|(_, k)| k).collect::<Vec<_>>();
         let next_queued_authorities = queued_validators.map(|(_, k)| k).collect::<Vec<_>>();
-        log::debug!(target: LOG_TARGET, "[on_new_session] Validators: {:?}, Queued Validators: {:?}",
+        log::debug!(target: LOG_TARGET, "🎲 [ETF] Validators: {:?}, Queued Validators: {:?}",
             next_authorities.clone(),
             next_queued_authorities.clone(),
         );
