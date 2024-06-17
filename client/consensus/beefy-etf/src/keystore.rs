@@ -219,6 +219,9 @@ impl<AuthorityId: AuthorityIdBound> BeefyKeystore<AuthorityId> {
         message: &[u8],
         threshold: u8,
     ) -> Result<<AuthorityId as RuntimeAppPublic>::Signature, error::Error> {
+        log::debug!(
+            target: LOG_TARGET,
+            "🎲 [ETF][etf_sign] Public: {:?}, pok_bytes: {:?}, message: {:?}, threshold: {:?}", public, pok_bytes, message, threshold);
         let store = self
             .0
             .clone()
@@ -227,10 +230,11 @@ impl<AuthorityId: AuthorityIdBound> BeefyKeystore<AuthorityId> {
             .unwrap();
 
         let public: bls377::Public = bls377::Public::try_from(public.as_slice()).unwrap();
-
+        log::debug!(target: LOG_TARGET, "🎲 [ETF][etf_sign] Public: {:?}", public);
         let sig = store
             .acss_recover(BEEFY_KEY_TYPE, &public, pok_bytes, message, threshold)
-            .map_err(|_| {
+            .map_err(|e| {
+                log::debug!(target: LOG_TARGET, "🎲 [ETF][etf_sign] Error: {:?}", e);
                 error::Error::Signature(format!(
                     "Failed to recover a key from the provided proof of knowledge"
                 ))

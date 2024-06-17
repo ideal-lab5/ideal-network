@@ -261,7 +261,7 @@ fn testnet_genesis(
             .iter()
             .map(|x| x.2.clone())
             .collect::<Vec<_>>(),
-        vec!["Alice", "Bob", "Charlie"],
+        vec!["Alice", "Bob"],
     );
     serde_json::json!({
         "balances": {
