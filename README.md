@@ -60,28 +60,42 @@ and run them with:
     --output /pallets/etf/src/weight.rs
 ```
 
-## WIP Parachain 
+## How to run IDL NW Parachain 
 
 https://docs.substrate.io/tutorials/build-a-parachain/prepare-a-local-relay-chain/
 
 https://docs.substrate.io/tutorials/build-a-parachain/connect-a-local-parachain/
 
+1. Build the relay chain and parachain
 ```sh
-./target/release/ideal-nw-node build-spec --disable-default-bootnode > plain-ideal-nw-chainspec.json
+cd polkadot-sdk
+cargo build --release
+cd ../ideal-network
+cargo build --release
 ```
 
+2. Generate node keys for Alice and Bob on the relay chain
 ```sh
-./target/release/ideal-nw-node build-spec --chain plain-ideal-nw-chainspec.json --disable-default-bootnode --raw > raw-ideal-nw-chainspec.json
+./polkadot-sdk/target/release/polkadot key generate-node-key --base-path ./polkadot-sdk/target/tmp/relay/alice
+./polkadot-sdk/target/release/polkadot key generate-node-key --base-path ./polkadot-sdk/target/tmp/relay/bob
 ```
 
-generate node keys
+3. Copy paste the generated Alice keys to the parachain
 ```sh
-./target/release/polkadot key generate-node-key --base-path ./target/tmp/relay/alice
+cp ./polkadot-sdk/target/tmp/relay/alice/chains/polkadot/network/secret_ed25519 \
+./ideal-network/target/tmp/ideal-nw/alice/chains/local_testnet/network/secret_ed25519
 ```
 
-launch node 1
+4. Download the raw chainspec file
+https://docs.substrate.io/assets/tutorials/relay-chain-specs/raw-local-chainspec.json
+and save it to `polkadot-sdk/target/tmp/raw-local-chainspec.json`.
+Change the `name` field to "Polkadot Local Testnet" and the `id` field to `polkadot`.
+
+5. Run Alice validator on the relay chain
 ```sh
-./target/release/polkadot \                                               
+cd polkadot-sdk
+
+./target/release/polkadot \                                                                                                                   
 --alice \
 --validator \
 --base-path ./target/tmp/relay/alice \
@@ -90,29 +104,47 @@ launch node 1
 --rpc-port 9944 \
 --insecure-validator-i-know-what-i-do
 ```
+And save the node id for Alice.
 
-launch node 2
+6. Run Bob validator on the relay chain
 ```sh
-./target/release/polkadot \
---bob \
+./target/release/polkadot \                                                                                                                   
+--bob \  
 --validator \
---base-path ./target/tmp/relay/bob \
+--base-path ./target/tmp/relay/bob \  
 --chain ./target/tmp/raw-local-chainspec.json \
 --port 30334 \
 --rpc-port 9945 \
 --insecure-validator-i-know-what-i-do \
---bootnodes /ip4/127.0.0.1/tcp/30333/p2p/[NODE-1-ID]
+--bootnodes /ip4/127.0.0.1/tcp/30333/p2p/[alice-node-id]
+```
+*Both validators should be running and finalizing relay chain blocks now.*
+
+7. Reserve a parachain identifier:
+- Open https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944 in a browser.
+- Go to Network > Parachains then to Parathreads.
+- Click `+ ParaId` and reserve the ID 2000 for the parachain.
+- Submit the transaction
+
+8. Generate the chainspecs for the parachain
+```sh
+cd ../ideal-network
+./target/release/ideal-nw-node build-spec --disable-default-bootnode > plain-ideal-nw-chainspec.json
+./target/release/ideal-nw-node build-spec --chain plain-ideal-nw-chainspec.json --disable-default-bootnode --raw > raw-ideal-nw-chainspec.json
 ```
 
-Copy Alice keys over from Relay to Parachain. (?)
-
-Launch Parachain
+9. Generate genesis state and wasm blob for the parachain
 ```sh
- ./target/release/ideal-nw-node \
+./target/release/ideal-nw-node export-genesis-state --chain raw-ideal-nw-chainspec.json ideal-nw-2000-genesis-state
+./target/release/ideal-nw-node export-genesis-wasm --chain raw-ideal-nw-chainspec.json ideal-nw-2000-wasm
+```
+
+10. Run the parachain collator
+```sh
+./target/release/ideal-nw-node \
 --alice \
 --collator \
 --force-authoring \
---chain raw-ideal-nw-chainspec.json \
 --base-path ./target/tmp/ideal-nw/alice \
 --port 40333 \
 --rpc-port 8844 \
@@ -121,5 +153,20 @@ Launch Parachain
 --chain ../polkadot-sdk/target/tmp/raw-local-chainspec.json \
 --port 30343 \
 --rpc-port 9977 \
---bootnodes /ip4/127.0.0.1/tcp/30333/p2p/[NODE-1-ID]
+--bootnodes /ip4/127.0.0.1/tcp/30333/p2p/[alice-node-id]
 ```
+*The collator should be creating blocks, but not finalizing them yet.*
+
+11. Register the parachain
+- Open https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944 in a browser.
+- Go to Developer > Sudo
+- Select `paraSudoWrapper` and `sudoScheduleParaInitialize` with:
+  - `paraId`: 2000
+  - `genesisHead`: upload the `ideal-nw-2000-genesis-state` file
+  - `validationCode`: upload the `ideal-nw-2000-wasm` file
+  - `paraKind`: Yes
+  - Submit the transaction
+
+12. Wait for the parachain to be registered and start finalizing blocks.
+
+*You can check this on your parachain collator terminal.*
