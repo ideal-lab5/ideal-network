@@ -848,7 +848,7 @@ where
             match self.etf_extract(target_hash, authority_id.clone(), &encoded_commitment) {
                 Some(sig) => sig,
                 None => {
-                    warn!(target: LOG_TARGET, "🎲 Error calculating ETF signature");
+                    error!(target: LOG_TARGET, "🎲 Error calculating ETF signature");
                     return Ok(None);
                 }
             };
@@ -944,19 +944,19 @@ where
             hash
         );
         if let Some(Some(validator_set)) = runtime_api.validator_set(hash).ok() {
-            log::debug!(target: LOG_TARGET, "🎲 [ETF] validator_set: {:?}", validator_set);
+            debug!(target: LOG_TARGET, "🎲 [ETF] validator_set: {:?}", validator_set);
             if let Some(Some(pok_bytes)) = runtime_api.read_share(hash, id.clone()).ok() {
-                log::debug!(target: LOG_TARGET, "🎲 [ETF] pok_bytes: {:?}", pok_bytes);
+                debug!(target: LOG_TARGET, "🎲 [ETF] pok_bytes: {:?}", pok_bytes);
                 match self
                     .key_store
                     .etf_sign(&id, &pok_bytes, &message, validator_set.len() as u8)
                 {
                     Ok(sig) => return Some(sig),
-                    Err(e) => log::debug!("🎲 [ETF] Error signing: {:?}", e),
+                    Err(e) => error!(target: LOG_TARGET, "🎲 [ETF] Error signing: {:?}", e),
                 }
             }
         }
-        log::debug!(target: LOG_TARGET, "🎲 [ETF] extract failed with id: {:?} and message: {:?}", id, message);
+        debug!(target: LOG_TARGET, "🎲 [ETF] extract failed with id: {:?} and message: {:?}", id, message);
 
         None
     }

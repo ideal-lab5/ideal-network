@@ -25,7 +25,7 @@ use sp_crypto_hashing::keccak_256;
 use sp_keystore::KeystorePtr;
 
 use codec::Decode;
-use log::warn;
+use log::{debug, warn};
 use std::marker::PhantomData;
 
 use crate::{error, LOG_TARGET};
@@ -219,22 +219,20 @@ impl<AuthorityId: AuthorityIdBound> BeefyKeystore<AuthorityId> {
         message: &[u8],
         threshold: u8,
     ) -> Result<<AuthorityId as RuntimeAppPublic>::Signature, error::Error> {
-        log::debug!(
+        debug!(
             target: LOG_TARGET,
             "🎲 [ETF][etf_sign] Public: {:?}, pok_bytes: {:?}, message: {:?}, threshold: {:?}", public, pok_bytes, message, threshold);
         let store = self
             .0
             .clone()
-            .ok_or_else(|| error::Error::Keystore("no Keystore".into()))
-            .map_err(|_| ())
-            .unwrap();
+            .ok_or_else(|| error::Error::Keystore("no Keystore".into()))?;
 
         let public: bls377::Public = bls377::Public::try_from(public.as_slice()).unwrap();
-        log::debug!(target: LOG_TARGET, "🎲 [ETF][etf_sign] Public: {:?}", public);
+        debug!(target: LOG_TARGET, "🎲 [ETF][etf_sign] Public: {:?}", public);
         let sig = store
             .acss_recover(BEEFY_KEY_TYPE, &public, pok_bytes, message, threshold)
             .map_err(|e| {
-                log::debug!(target: LOG_TARGET, "🎲 [ETF][etf_sign] Error: {:?}", e);
+                log::error!(target: LOG_TARGET, "🎲 [ETF][etf_sign] Error: {:?}", e);
                 error::Error::Signature(format!(
                     "Failed to recover a key from the provided proof of knowledge"
                 ))
@@ -266,12 +264,11 @@ where
 
 #[cfg(test)]
 pub mod tests {
+    #[cfg(not(feature = "bls-experimental"))]
+    use sp_consensus_beefy_etf::ecdsa_crypto;
+    use sp_consensus_beefy_etf::test_utils::{BeefySignerAuthority, Keyring};
     #[cfg(feature = "bls-experimental")]
-    use sp_consensus_beefy_etf::ecdsa_bls_crypto;
-    use sp_consensus_beefy_etf::{
-        ecdsa_crypto,
-        test_utils::{BeefySignerAuthority, Keyring},
-    };
+    use sp_consensus_beefy_etf::{bls_crypto, ecdsa_bls_crypto};
     use sp_core::Pair as PairT;
     use sp_keystore::{testing::MemoryKeystore, Keystore};
 
@@ -365,9 +362,16 @@ pub mod tests {
         }
     }
 
+    #[cfg(not(feature = "bls-experimental"))]
     #[test]
     fn pair_verify_should_work_ecdsa() {
         pair_verify_should_work::<ecdsa_crypto::AuthorityId>();
+    }
+
+    #[cfg(feature = "bls-experimental")]
+    #[test]
+    fn pair_verify_should_work_bls() {
+        pair_verify_should_work::<bls_crypto::AuthorityId>();
     }
 
     #[cfg(feature = "bls-experimental")]
@@ -433,9 +437,16 @@ pub mod tests {
         assert_eq!(want, got);
     }
 
+    #[cfg(not(feature = "bls-experimental"))]
     #[test]
     fn ecdsa_pair_works() {
         pair_works::<ecdsa_crypto::AuthorityId>();
+    }
+
+    #[cfg(feature = "bls-experimental")]
+    #[test]
+    fn bls_pair_works() {
+        pair_works::<bls_crypto::AuthorityId>();
     }
 
     #[cfg(feature = "bls-experimental")]
@@ -474,9 +485,16 @@ pub mod tests {
         assert_eq!(id, alice);
     }
 
+    #[cfg(not(feature = "bls-experimental"))]
     #[test]
     fn authority_id_works_for_ecdsa() {
         authority_id_works::<ecdsa_crypto::AuthorityId>();
+    }
+
+    #[cfg(feature = "bls-experimental")]
+    #[test]
+    fn authority_id_works_for_bls() {
+        authority_id_works::<bls_crypto::AuthorityId>();
     }
 
     #[cfg(feature = "bls-experimental")]
@@ -509,9 +527,16 @@ pub mod tests {
         assert_eq!(sig1, sig2);
     }
 
+    #[cfg(not(feature = "bls-experimental"))]
     #[test]
     fn sign_works_for_ecdsa() {
         sign_works::<ecdsa_crypto::AuthorityId>();
+    }
+
+    #[cfg(feature = "bls-experimental")]
+    #[test]
+    fn sign_works_for_bls() {
+        sign_works::<bls_crypto::AuthorityId>();
     }
 
     #[cfg(feature = "bls-experimental")]
@@ -544,9 +569,15 @@ pub mod tests {
         assert_eq!(sig, err);
     }
 
+    #[cfg(not(feature = "bls-experimental"))]
     #[test]
     fn sign_error_for_ecdsa() {
         sign_error::<ecdsa_crypto::AuthorityId>("ecdsa_sign_prehashed() failed");
+    }
+
+    #[cfg(feature = "bls-experimental")]
+    fn sign_error_for_bls() {
+        sign_error::<bls_crypto::AuthorityId>("bls_sign_prehashed() failed");
     }
 
     #[cfg(feature = "bls-experimental")]
@@ -557,6 +588,9 @@ pub mod tests {
 
     #[test]
     fn sign_no_keystore() {
+        #[cfg(feature = "bls-experimental")]
+        let store: BeefyKeystore<bls_crypto::Public> = None.into();
+        #[cfg(not(feature = "bls-experimental"))]
         let store: BeefyKeystore<ecdsa_crypto::Public> = None.into();
 
         let alice = Keyring::Alice.public();
@@ -593,6 +627,7 @@ pub mod tests {
         assert!(!BeefyKeystore::verify(&alice, &sig, msg));
     }
 
+    #[cfg(not(feature = "bls-experimental"))]
     #[test]
     fn verify_works_for_ecdsa() {
         verify_works::<ecdsa_crypto::AuthorityId>();
@@ -600,7 +635,12 @@ pub mod tests {
 
     #[cfg(feature = "bls-experimental")]
     #[test]
+    fn verify_works_for_bls() {
+        verify_works::<bls_crypto::AuthorityId>();
+    }
 
+    #[cfg(feature = "bls-experimental")]
+    #[test]
     fn verify_works_for_ecdsa_n_bls() {
         verify_works::<ecdsa_bls_crypto::AuthorityId>();
     }
@@ -645,9 +685,16 @@ pub mod tests {
         assert!(keys.contains(&key2));
     }
 
+    #[cfg(not(feature = "bls-experimental"))]
     #[test]
     fn public_keys_works_for_ecdsa_keystore() {
         public_keys_works::<ecdsa_crypto::AuthorityId>();
+    }
+
+    #[cfg(feature = "bls-experimental")]
+    #[test]
+    fn public_keys_works_for_bls_keystore() {
+        public_keys_works::<bls_crypto::AuthorityId>();
     }
 
     #[cfg(feature = "bls-experimental")]

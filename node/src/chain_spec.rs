@@ -19,7 +19,7 @@ use etf_crypto_primitives::dpss::acss::DoubleSecret;
 use rand::rngs::OsRng;
 use w3f_bls::{DoublePublicKey, DoublePublicKeyScheme, EngineBLS, SerializableToBytes, TinyBLS377};
 /// Specialized `ChainSpec` for the normal parachain runtime.
-pub type ChainSpec = sc_service::GenericChainSpec<(), Extensions>;
+pub type ChainSpec = sc_service::GenericChainSpec<Extensions>;
 
 /// The default XCM version to set in genesis config.
 const SAFE_XCM_VERSION: u32 = xcm::prelude::XCM_VERSION;

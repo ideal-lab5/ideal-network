@@ -538,7 +538,7 @@ pub(crate) mod tests {
     ) -> Signature {
         let store = MemoryKeystore::new();
         store
-            .ecdsa_generate_new(BEEFY_KEY_TYPE, Some(&who.to_seed()))
+            .bls377_generate_new(BEEFY_KEY_TYPE, Some(&who.to_seed()))
             .unwrap();
         let beefy_keystore: BeefyKeystore<AuthorityId> = Some(store.into()).into();
         beefy_keystore
