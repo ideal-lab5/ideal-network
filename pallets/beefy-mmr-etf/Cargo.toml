@@ -23,8 +23,8 @@ frame-system = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch 
 pallet-beefy = { package = "pallet-beefy-etf", path = "../beefy-etf", default-features = false }
 pallet-mmr = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
 pallet-session = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
-# sp-consensus-beefy-etf = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false, features = ["bls-experimental"]}
-sp-consensus-beefy-etf = { path = "../../primitives/consensus/beefy-etf", default-features = false, features = ["bls-experimental"]}
+# sp-consensus-beefy-etf = { path = "../../primitives/consensus/beefy-etf", default-features = false, features = ["bls-experimental"]}
+sp-consensus-beefy-etf = { path = "../../primitives/consensus/beefy-etf", default-features = false }
 sp-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
 sp-io = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
 sp-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
@@ -67,4 +67,7 @@ try-runtime = [
 	"pallet-mmr/try-runtime",
 	"pallet-session/try-runtime",
 	"sp-runtime/try-runtime",
+]
+bls-experimental = [
+	"sp-consensus-beefy-etf/bls-experimental",
 ]

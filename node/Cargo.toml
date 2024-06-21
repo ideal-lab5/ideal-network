@@ -31,8 +31,10 @@ w3f-bls = "0.1.3"
 etf-crypto-primitives = { git = "https://github.com/ideal-lab5/etf-sdk.git", branch = "w3fbls-migration" }
 
 # Local
-beefy = { package = "sc-consensus-beefy-etf", path = "../client/consensus/beefy-etf", features = ["bls-experimental"] }
-beefy-primitives = { package = "sp-consensus-beefy-etf", path = "../primitives/consensus/beefy-etf", features = ["bls-experimental"]}
+# beefy = { package = "sc-consensus-beefy-etf", path = "../client/consensus/beefy-etf", features = ["bls-experimental"] }
+# beefy-primitives = { package = "sp-consensus-beefy-etf", path = "../primitives/consensus/beefy-etf", features = ["bls-experimental"]}
+beefy = { package = "sc-consensus-beefy-etf", path = "../client/consensus/beefy-etf" }
+beefy-primitives = { package = "sp-consensus-beefy-etf", path = "../primitives/consensus/beefy-etf" }
 ideal-nw-runtime = { path = "../runtime" }
 
 # Substrate
@@ -103,4 +105,8 @@ try-runtime = [
 	"ideal-nw-runtime/try-runtime",
 	"polkadot-cli/try-runtime",
 	"sp-runtime/try-runtime",
+]
+bls-experimental = [
+	"beefy/bls-experimental",
+	"beefy-primitives/bls-experimental",
 ]

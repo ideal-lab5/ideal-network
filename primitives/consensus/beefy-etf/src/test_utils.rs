@@ -27,7 +27,7 @@ use crate::{
     VoteMessage,
 };
 use sp_application_crypto::{AppCrypto, AppPair, RuntimeAppPublic, Wraps};
-use sp_core::{ecdsa, Pair as TPair};
+use sp_core::Pair as TPair;
 use sp_runtime::traits::Hash;
 
 use codec::Encode;
