@@ -599,7 +599,8 @@ pub(crate) mod tests {
     fn should_validate_messages() {
         let keys = vec![Keyring::<AuthorityId>::Alice.public()];
         #[cfg(feature = "bls-experimental")]
-        let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), vec![], 0).unwrap();
+        let validator_set =
+            ValidatorSet::<AuthorityId>::new(keys.clone(), keys.clone(), 0).unwrap();
         #[cfg(not(feature = "bls-experimental"))]
         let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), 0).unwrap();
         let (gv, mut report_stream) =
@@ -714,7 +715,7 @@ pub(crate) mod tests {
 
         // reject proof, future set_id
         #[cfg(feature = "bls-experimental")]
-        let bad_validator_set = ValidatorSet::<AuthorityId>::new(keys, vec![], 1).unwrap();
+        let bad_validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), keys, 1).unwrap();
         #[cfg(not(feature = "bls-experimental"))]
         let bad_validator_set = ValidatorSet::<AuthorityId>::new(keys, 1).unwrap();
         let proof = dummy_proof(20, &bad_validator_set);
@@ -727,7 +728,7 @@ pub(crate) mod tests {
         // reject proof, bad signatures (Bob instead of Alice)
         #[cfg(feature = "bls-experimental")]
         let bad_validator_set =
-            ValidatorSet::<AuthorityId>::new(vec![Keyring::Bob.public()], vec![], 0).unwrap();
+            ValidatorSet::<AuthorityId>::new(vec![Keyring::Bob.public()], vec![Keyring::Bob.public()], 0).unwrap();
         #[cfg(not(feature = "bls-experimental"))]
         let bad_validator_set =
             ValidatorSet::<AuthorityId>::new(vec![Keyring::Bob.public()], 0).unwrap();
@@ -744,7 +745,7 @@ pub(crate) mod tests {
     fn messages_allowed_and_expired() {
         let keys = vec![Keyring::Alice.public()];
         #[cfg(feature = "bls-experimental")]
-        let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), vec![], 0).unwrap();
+        let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), keys.clone(), 0).unwrap();
         #[cfg(not(feature = "bls-experimental"))]
         let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), 0).unwrap();
         let (gv, _) = GossipValidator::<Block>::new(Arc::new(Mutex::new(KnownPeers::new())));
@@ -791,9 +792,9 @@ pub(crate) mod tests {
         assert!(!expired(topic, &mut encoded_proof));
         // using wrong set_id -> !allowed, expired
         #[cfg(feature = "bls-experimental")]
-        let bad_validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), vec![], 1).unwrap();
+        let bad_validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), keys, 1).unwrap();
         #[cfg(not(feature = "bls-experimental"))]
-        let bad_validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), 1).unwrap();
+        let bad_validator_set = ValidatorSet::<AuthorityId>::new(keys, 1).unwrap();
         let proof = dummy_proof(2, &bad_validator_set);
         let mut encoded_proof = GossipMessage::<Block>::FinalityProof(proof).encode();
         assert!(!allowed(&sender, intent, &topic, &mut encoded_proof));
@@ -835,9 +836,9 @@ pub(crate) mod tests {
     fn messages_rebroadcast() {
         let keys = vec![Keyring::Alice.public()];
         #[cfg(feature = "bls-experimental")]
-        let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), vec![], 0).unwrap();
+        let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), keys, 0).unwrap();
         #[cfg(not(feature = "bls-experimental"))]
-        let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), 0).unwrap();
+        let validator_set = ValidatorSet::<AuthorityId>::new(keys, 0).unwrap();
         let (gv, _) = GossipValidator::<Block>::new(Arc::new(Mutex::new(KnownPeers::new())));
         gv.update_filter(GossipFilterCfg {
             start: 0,

@@ -274,12 +274,6 @@ impl<AuthorityId> ValidatorSet<AuthorityId> {
         &self.validators
     }
 
-    /// Return a reference to the vec of commitments
-    #[cfg(feature = "bls-experimental")]
-    pub fn commitments(&self) -> &[AuthorityId] {
-        &self.commitments
-    }
-
     /// Return the validator set id.
     pub fn id(&self) -> ValidatorSetId {
         self.id

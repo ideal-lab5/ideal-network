@@ -283,7 +283,11 @@ mod tests {
                 Keyring::Bob.public(),
                 Keyring::Charlie.public(),
             ],
-            vec![],
+            vec![
+                Keyring::Alice.public(),
+                Keyring::Bob.public(),
+                Keyring::Charlie.public(),
+            ],
             42,
         )
         .unwrap();
@@ -325,7 +329,12 @@ mod tests {
                 Keyring::Charlie.public(),
                 Keyring::Eve.public(),
             ],
-            vec![],
+            vec![
+                Keyring::Alice.public(),
+                Keyring::Bob.public(),
+                Keyring::Charlie.public(),
+                Keyring::Eve.public(),
+            ],
             Default::default(),
         )
         .unwrap();
@@ -407,7 +416,11 @@ mod tests {
                 Keyring::Bob.public(),
                 Keyring::Charlie.public(),
             ],
-            vec![],
+            vec![
+                Keyring::Alice.public(),
+                Keyring::Bob.public(),
+                Keyring::Charlie.public(),
+            ],
             42,
         )
         .unwrap();
@@ -473,7 +486,11 @@ mod tests {
                 Keyring::Bob.public(),
                 Keyring::Charlie.public(),
             ],
-            vec![],
+            vec![
+                Keyring::Alice.public(),
+                Keyring::Bob.public(),
+                Keyring::Charlie.public(),
+            ],
             Default::default(),
         )
         .unwrap();
@@ -564,7 +581,7 @@ mod tests {
         #[cfg(feature = "bls-experimental")]
         let validators = ValidatorSet::<AuthorityId>::new(
             vec![Keyring::Alice.public(), Keyring::Bob.public()],
-            vec![],
+            vec![Keyring::Alice.public(), Keyring::Bob.public()],
             Default::default(),
         )
         .unwrap();

@@ -172,7 +172,7 @@ pub(crate) mod tests {
     fn should_verify_with_validator_set() {
         let keys = &[Keyring::Alice, Keyring::Bob, Keyring::Charlie];
         #[cfg(feature = "bls-experimental")]
-        let validator_set = ValidatorSet::new(make_beefy_ids(keys), vec![], 0).unwrap();
+        let validator_set = ValidatorSet::new(make_beefy_ids(keys), make_beefy_ids(keys), 0).unwrap();
         #[cfg(not(feature = "bls-experimental"))]
         let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
 
@@ -195,7 +195,7 @@ pub(crate) mod tests {
         let good_proof = proof.clone().into();
 
         #[cfg(feature = "bls-experimental")]
-        let other = ValidatorSet::new(make_beefy_ids(keys), vec![], 1).unwrap();
+        let other = ValidatorSet::new(make_beefy_ids(keys), make_beefy_ids(keys), 1).unwrap();
         #[cfg(not(feature = "bls-experimental"))]
         let other = ValidatorSet::new(make_beefy_ids(keys), 1).unwrap();
 
@@ -247,7 +247,8 @@ pub(crate) mod tests {
         let keys = &[Keyring::Alice, Keyring::Bob];
 
         #[cfg(feature = "bls-experimental")]
-        let validator_set = ValidatorSet::new(make_beefy_ids(keys), vec![], 0).unwrap();
+        let validator_set =
+            ValidatorSet::new(make_beefy_ids(keys), make_beefy_ids(keys), 0).unwrap();
         #[cfg(not(feature = "bls-experimental"))]
         let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
         let block_num = 1;
