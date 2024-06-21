@@ -76,8 +76,7 @@ where
     <MsgHash as Hash>::Output: Into<[u8; 32]>,
 {
     fn sign_with_hasher(&self, message: &[u8]) -> <Self as AppCrypto>::Signature {
-        let hashed_message = <MsgHash as Hash>::hash(message).into();
-        self.as_inner_ref().sign(&hashed_message).into()
+        self.as_inner_ref().sign(&message).into()
     }
 }
 

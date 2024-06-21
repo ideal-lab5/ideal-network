@@ -19,10 +19,8 @@ log = { workspace = true, default-features = true }
 parking_lot = "0.12.1"
 serde = { features = ["derive"], workspace = true, default-features = true }
 thiserror = { workspace = true }
-# sc-consensus-beefy-etf = { path = "..", features = ["bls-experimental"] }
-# sp-consensus-beefy-etf = { path = "../../../../primitives/consensus/beefy-etf", features = ["bls-experimental"] }
-sc-consensus-beefy-etf = { path = ".." }
-sp-consensus-beefy-etf = { path = "../../../../primitives/consensus/beefy-etf" }
+sc-consensus-beefy-etf = { path = "..", features = ["bls-experimental"] }
+sp-consensus-beefy-etf = { path = "../../../../primitives/consensus/beefy-etf", features = ["bls-experimental"] }
 sc-rpc = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
 sp-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
 sp-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
@@ -32,6 +30,3 @@ serde_json = { workspace = true, default-features = true }
 sc-rpc = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", features = ["test-helpers"] }
 substrate-test-runtime-client = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
 tokio = { version = "1.22.0", features = ["macros"] }
-
-[features]
-bls-experimental = ["sc-consensus-beefy-etf/bls-experimental", "sp-consensus-beefy-etf/bls-experimental"]

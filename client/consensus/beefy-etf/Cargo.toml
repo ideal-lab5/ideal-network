@@ -37,8 +37,7 @@ sp-consensus = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch 
 sp-consensus-beefy-etf = { path = "../../../primitives/consensus/beefy-etf" }
 sp-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
 sp-crypto-hashing = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-keystore = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-# sp-keystore = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", features = ["bls-experimental"]}
+sp-keystore = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", features = ["bls-experimental"]}
 sp-mmr-primitives = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
 sp-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
 tokio = "1.22.0"
@@ -64,7 +63,6 @@ bls-experimental = [
 	"sp-application-crypto/bls-experimental",
 	"sp-consensus-beefy-etf/bls-experimental",
 	"sp-core/bls-experimental",
-	"sp-keystore/bls-experimental",
 	"ark-bls12-377",
 	"w3f-bls"
 ]
