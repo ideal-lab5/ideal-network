@@ -61,10 +61,10 @@ pub const KEY_TYPE: sp_core::crypto::KeyTypeId = sp_application_crypto::key_type
 ///
 /// Accepts custom hashing fn for the message and custom convertor fn for the signer.
 pub trait BeefyAuthorityId<MsgHash: Hash>: RuntimeAppPublic {
-    /// Verify a signature.
-    ///
-    /// Return `true` if signature over `msg` is valid for this id.
-    fn verify(&self, signature: &<Self as RuntimeAppPublic>::Signature, msg: &[u8]) -> bool;
+	/// Verify a signature.
+	///
+	/// Return `true` if signature over `msg` is valid for this id.
+	fn verify(&self, signature: &<Self as RuntimeAppPublic>::Signature, msg: &[u8]) -> bool;
 }
 
 /// Hasher used for BEEFY signatures.
@@ -73,16 +73,16 @@ pub type BeefySignatureHasher = sp_runtime::traits::Keccak256;
 /// A trait bound which lists all traits which are required to be implemented by
 /// a BEEFY AuthorityId type in order to be able to be used in BEEFY Keystore
 pub trait AuthorityIdBound:
-    Codec
-    + Debug
-    + Clone
-    + AsRef<[u8]>
-    + ByteArray
-    + AppPublic
-    + AppCrypto
-    + RuntimeAppPublic
-    + Display
-    + BeefyAuthorityId<BeefySignatureHasher>
+	Codec
+	+ Debug
+	+ Clone
+	+ AsRef<[u8]>
+	+ ByteArray
+	+ AppPublic
+	+ AppCrypto
+	+ RuntimeAppPublic
+	+ Display
+	+ BeefyAuthorityId<BeefySignatureHasher>
 {
 }
 
@@ -97,34 +97,34 @@ pub trait AuthorityIdBound:
 /// Your code should use the above types as concrete types for all crypto related
 /// functionality.
 pub mod ecdsa_crypto {
-    use super::{AuthorityIdBound, BeefyAuthorityId, Hash, RuntimeAppPublic, KEY_TYPE};
-    use sp_application_crypto::{app_crypto, ecdsa};
-    use sp_core::crypto::Wraps;
+	use super::{AuthorityIdBound, BeefyAuthorityId, Hash, RuntimeAppPublic, KEY_TYPE};
+	use sp_application_crypto::{app_crypto, ecdsa};
+	use sp_core::crypto::Wraps;
 
-    app_crypto!(ecdsa, KEY_TYPE);
+	app_crypto!(ecdsa, KEY_TYPE);
 
-    /// Identity of a BEEFY authority using ECDSA as its crypto.
-    pub type AuthorityId = Public;
+	/// Identity of a BEEFY authority using ECDSA as its crypto.
+	pub type AuthorityId = Public;
 
-    /// Signature for a BEEFY authority using ECDSA as its crypto.
-    pub type AuthoritySignature = Signature;
+	/// Signature for a BEEFY authority using ECDSA as its crypto.
+	pub type AuthoritySignature = Signature;
 
-    impl<MsgHash: Hash> BeefyAuthorityId<MsgHash> for AuthorityId
-    where
-        <MsgHash as Hash>::Output: Into<[u8; 32]>,
-    {
-        fn verify(&self, signature: &<Self as RuntimeAppPublic>::Signature, msg: &[u8]) -> bool {
-            let msg_hash = <MsgHash as Hash>::hash(msg).into();
-            match sp_io::crypto::secp256k1_ecdsa_recover_compressed(
-                signature.as_inner_ref().as_ref(),
-                &msg_hash,
-            ) {
-                Ok(raw_pubkey) => raw_pubkey.as_ref() == AsRef::<[u8]>::as_ref(self),
-                _ => false,
-            }
-        }
-    }
-    impl AuthorityIdBound for AuthorityId {}
+	impl<MsgHash: Hash> BeefyAuthorityId<MsgHash> for AuthorityId
+	where
+		<MsgHash as Hash>::Output: Into<[u8; 32]>,
+	{
+		fn verify(&self, signature: &<Self as RuntimeAppPublic>::Signature, msg: &[u8]) -> bool {
+			let msg_hash = <MsgHash as Hash>::hash(msg).into();
+			match sp_io::crypto::secp256k1_ecdsa_recover_compressed(
+				signature.as_inner_ref().as_ref(),
+				&msg_hash,
+			) {
+				Ok(raw_pubkey) => raw_pubkey.as_ref() == AsRef::<[u8]>::as_ref(self),
+				_ => false,
+			}
+		}
+	}
+	impl AuthorityIdBound for AuthorityId {}
 }
 
 /// BEEFY cryptographic types for BLS crypto
@@ -137,34 +137,35 @@ pub mod ecdsa_crypto {
 ///
 /// Your code should use the above types as concrete types for all crypto related
 /// functionality.
-#[cfg(feature = "bls-experimental")]
+
+// #[cfg(feature = "bls-experimental")]
 pub mod bls_crypto {
-    use super::{AuthorityIdBound, BeefyAuthorityId, Hash, RuntimeAppPublic, KEY_TYPE};
-    use sp_application_crypto::{app_crypto, bls377};
-    use sp_core::{bls377::Pair as BlsPair, crypto::Wraps, Pair as _};
+	use super::{AuthorityIdBound, BeefyAuthorityId, Hash, RuntimeAppPublic, KEY_TYPE};
+	use sp_application_crypto::{app_crypto, bls377};
+	use sp_core::{bls377::Pair as BlsPair, crypto::Wraps, Pair as _};
 
-    app_crypto!(bls377, KEY_TYPE);
+	app_crypto!(bls377, KEY_TYPE);
 
-    /// Identity of a BEEFY authority using BLS as its crypto.
-    pub type AuthorityId = Public;
+	/// Identity of a BEEFY authority using BLS as its crypto.
+	pub type AuthorityId = Public;
 
-    /// Signature for a BEEFY authority using BLS as its crypto.
-    pub type AuthoritySignature = Signature;
+	/// Signature for a BEEFY authority using BLS as its crypto.
+	pub type AuthoritySignature = Signature;
 
-    impl<MsgHash: Hash> BeefyAuthorityId<MsgHash> for AuthorityId
-    where
-        <MsgHash as Hash>::Output: Into<[u8; 32]>,
-    {
-        fn verify(&self, signature: &<Self as RuntimeAppPublic>::Signature, msg: &[u8]) -> bool {
-            // `w3f-bls` library uses IETF hashing standard and as such does not expose
-            // a choice of hash-to-field function.
-            // We are directly calling into the library to avoid introducing new host call.
-            // and because BeefyAuthorityId::verify is being called in the runtime so we don't have
+	impl<MsgHash: Hash> BeefyAuthorityId<MsgHash> for AuthorityId
+	where
+		<MsgHash as Hash>::Output: Into<[u8; 32]>,
+	{
+		fn verify(&self, signature: &<Self as RuntimeAppPublic>::Signature, msg: &[u8]) -> bool {
+			// `w3f-bls` library uses IETF hashing standard and as such does not expose
+			// a choice of hash-to-field function.
+			// We are directly calling into the library to avoid introducing new host call.
+			// and because BeefyAuthorityId::verify is being called in the runtime so we don't have
 
-            BlsPair::verify(signature.as_inner_ref(), msg, self.as_inner_ref())
-        }
-    }
-    impl AuthorityIdBound for AuthorityId {}
+			BlsPair::verify(signature.as_inner_ref(), msg, self.as_inner_ref())
+		}
+	}
+	impl AuthorityIdBound for AuthorityId {}
 }
 
 /// BEEFY cryptographic types for (ECDSA,BLS) crypto pair
@@ -177,49 +178,49 @@ pub mod bls_crypto {
 ///
 /// Your code should use the above types as concrete types for all crypto related
 /// functionality.
-#[cfg(feature = "bls-experimental")]
+#[cfg(all(feature = "bls-experimental"))]
 pub mod ecdsa_bls_crypto {
-    use super::{AuthorityIdBound, BeefyAuthorityId, Hash, RuntimeAppPublic, KEY_TYPE};
-    use sp_application_crypto::{app_crypto, ecdsa_bls377};
-    // use sp_core::{crypto::Wraps, ecdsa_bls377::Pair as EcdsaBlsPair};
+	use super::{AuthorityIdBound, BeefyAuthorityId, Hash, RuntimeAppPublic, KEY_TYPE};
+	use sp_application_crypto::{app_crypto, ecdsa_bls377};
+	// use sp_core::{crypto::Wraps, ecdsa_bls377::Pair as EcdsaBlsPair};
 
-    app_crypto!(ecdsa_bls377, KEY_TYPE);
+	app_crypto!(ecdsa_bls377, KEY_TYPE);
 
-    /// Identity of a BEEFY authority using (ECDSA,BLS) as its crypto.
-    pub type AuthorityId = Public;
+	/// Identity of a BEEFY authority using (ECDSA,BLS) as its crypto.
+	pub type AuthorityId = Public;
 
-    /// Signature for a BEEFY authority using (ECDSA,BLS) as its crypto.
-    pub type AuthoritySignature = Signature;
+	/// Signature for a BEEFY authority using (ECDSA,BLS) as its crypto.
+	pub type AuthoritySignature = Signature;
 
-    impl<H> BeefyAuthorityId<H> for AuthorityId
-    where
-        H: Hash,
-        H::Output: Into<[u8; 32]>,
-    {
-        fn verify(&self, _signature: &<Self as RuntimeAppPublic>::Signature, _msg: &[u8]) -> bool {
-            // We can not simply call
-            // `EcdsaBlsPair::verify(signature.as_inner_ref(), msg, self.as_inner_ref())`
-            // because that invokes ECDSA default verification which performs Blake2b hash
-            // which we don't want. This is because ECDSA signatures are meant to be verified
-            // on Ethereum network where Keccak hasher is significantly cheaper than Blake2b.
-            // See Figure 3 of [OnSc21](https://www.scitepress.org/Papers/2021/106066/106066.pdf)
-            // for comparison.
+	impl<H> BeefyAuthorityId<H> for AuthorityId
+	where
+		H: Hash,
+		H::Output: Into<[u8; 32]>,
+	{
+		fn verify(&self, _signature: &<Self as RuntimeAppPublic>::Signature, _msg: &[u8]) -> bool {
+			// We can not simply call
+			// `EcdsaBlsPair::verify(signature.as_inner_ref(), msg, self.as_inner_ref())`
+			// because that invokes ECDSA default verification which performs Blake2b hash
+			// which we don't want. This is because ECDSA signatures are meant to be verified
+			// on Ethereum network where Keccak hasher is significantly cheaper than Blake2b.
+			// See Figure 3 of [OnSc21](https://www.scitepress.org/Papers/2021/106066/106066.pdf)
+			// for comparison.
 
-            // TODO: I'm not actually using this currently, just doing this so it will compile..
-            false
-            // this is the original code but I can't get it to compile for some reason...
-            // something about a missing panic handler appears when I try to enable the full_crypto feature
-            // for sp-core and sp-application-crypto
-            // not sure what I broke exactly to cause this, but we
-            // EcdsaBlsPair::verify_with_hasher::<H>(
-            // 	signature.as_inner_ref(),
-            // 	msg,
-            // 	self.as_inner_ref(),
-            // )
-        }
-    }
+			// TODO: I'm not actually using this currently, just doing this so it will compile..
+			false
+			// this is the original code but I can't get it to compile for some reason...
+			// something about a missing panic handler appears when I try to enable the full_crypto feature
+			// for sp-core and sp-application-crypto
+			// not sure what I broke exactly to cause this, but we 
+			// EcdsaBlsPair::verify_with_hasher::<H>(
+			// 	signature.as_inner_ref(),
+			// 	msg,
+			// 	self.as_inner_ref(),
+			// )
+		}
+	}
 
-    impl AuthorityIdBound for AuthorityId {}
+	impl AuthorityIdBound for AuthorityId {}
 }
 
 /// The `ConsensusEngineId` of BEEFY.
@@ -231,101 +232,103 @@ pub const GENESIS_AUTHORITY_SET_ID: u64 = 0;
 /// A typedef for validator set id.
 pub type ValidatorSetId = u64;
 
-/// A set of BEEFY authorities, a.k.a. validators.
-#[cfg(not(feature = "bls-experimental"))]
-#[derive(Decode, Encode, Debug, PartialEq, Clone, TypeInfo)]
-pub struct ValidatorSet<AuthorityId> {
-    /// Public keys of the validator set elements
-    validators: Vec<AuthorityId>,
-    /// Identifier of the validator set
-    id: ValidatorSetId,
-}
+// /// A set of BEEFY authorities, a.k.a. validators.
+// #[cfg(not(feature =  "bls-experimental"))]
+// #[derive(Decode, Encode, Debug, PartialEq, Clone, TypeInfo)]
+// pub struct ValidatorSet<AuthorityId> {
+// 	/// Public keys of the validator set elements
+// 	validators: Vec<AuthorityId>,
+// 	/// Identifier of the validator set
+// 	id: ValidatorSetId,
+// }
 
 /// A set of BEEFY authorities, a.k.a. validators.
-#[cfg(feature = "bls-experimental")]
+// #[cfg(feature =  "bls-experimental")]
 #[derive(Decode, Encode, Debug, PartialEq, Clone, TypeInfo)]
 pub struct ValidatorSet<AuthorityId> {
-    /// Public keys of the validator set elements
-    validators: Vec<AuthorityId>,
-    /// Public round key commitments for the validators
-    commitments: Vec<AuthorityId>,
-    /// Identifier of the validator set
-    id: ValidatorSetId,
+	/// Public keys of the validator set elements 
+	validators: Vec<AuthorityId>,
+	/// Public round key commitments for the validators
+	commitments: Vec<AuthorityId>,
+	/// Identifier of the validator set
+	id: ValidatorSetId,
 }
 
-#[cfg(not(feature = "bls-experimental"))]
+// #[cfg(not(feature =  "bls-experimental"))]
+// impl<AuthorityId> ValidatorSet<AuthorityId> {
+// 	/// Return a validator set with the given validators and set id.
+// 	pub fn new<I>(validators: I, id: ValidatorSetId) -> Option<Self>
+// 	where
+// 		I: IntoIterator<Item = AuthorityId>,
+// 	{
+// 		let validators: Vec<AuthorityId> = validators.into_iter().collect();
+// 		if validators.is_empty() {
+// 			// No validators; the set would be empty.
+// 			None
+// 		} else {
+// 			Some(Self { validators, id })
+// 		}
+// 	}
+
+// 	/// Return a reference to the vec of validators.
+// 	pub fn validators(&self) -> &[AuthorityId] {
+// 		&self.validators
+// 	}
+
+// 	/// Return a reference to the vec of commitments
+// 	#[cfg(feature = "bls-experimental")]
+// 	pub fn commitments(&self) -> &[AuthorityId] {
+// 		&self.commitments
+// 	}
+
+// 	/// Return the validator set id.
+// 	pub fn id(&self) -> ValidatorSetId {
+// 		self.id
+// 	}
+
+// 	/// Return the number of validators in the set.
+// 	pub fn len(&self) -> usize {
+// 		self.validators.len()
+// 	}
+// }
+
+// #[cfg(feature = "bls-experimental")]
 impl<AuthorityId> ValidatorSet<AuthorityId> {
-    /// Return a validator set with the given validators and set id.
-    pub fn new<I>(validators: I, id: ValidatorSetId) -> Option<Self>
-    where
-        I: IntoIterator<Item = AuthorityId>,
-    {
-        let validators: Vec<AuthorityId> = validators.into_iter().collect();
-        if validators.is_empty() {
-            // No validators; the set would be empty.
-            None
-        } else {
-            Some(Self { validators, id })
-        }
-    }
+	/// Return a validator set with the given validators and set id.
+	pub fn new<I>(validators: I, commitments: I, id: ValidatorSetId) -> Option<Self>
+	where
+		I: IntoIterator<Item = AuthorityId>,
+	{
+		let validators: Vec<AuthorityId> = validators.into_iter().collect();
+		let commitments: Vec<AuthorityId> = commitments.into_iter().collect();
+		if validators.is_empty() || commitments.is_empty() {
+			// No validators; the set would be empty.
+			// Or the validator and commitment set are improperly allocated
+			None
+		} else {
+			Some(Self { validators, commitments, id })
+		}
+	}
 
-    /// Return a reference to the vec of validators.
-    pub fn validators(&self) -> &[AuthorityId] {
-        &self.validators
-    }
+	/// Return a reference to the vec of validators.
+	pub fn validators(&self) -> &[AuthorityId] {
+		&self.validators
+	}
 
-    /// Return the validator set id.
-    pub fn id(&self) -> ValidatorSetId {
-        self.id
-    }
+	/// Return a reference to the vec of commitments.
+	pub fn commitments(&self) -> &[AuthorityId] {
+		&self.commitments
+	}
 
-    /// Return the number of validators in the set.
-    pub fn len(&self) -> usize {
-        self.validators.len()
-    }
-}
+	/// Return the validator set id.
+	pub fn id(&self) -> ValidatorSetId {
+		self.id
+	}
 
-#[cfg(feature = "bls-experimental")]
-impl<AuthorityId> ValidatorSet<AuthorityId> {
-    /// Return a validator set with the given validators and set id.
-    pub fn new<I>(validators: I, commitments: I, id: ValidatorSetId) -> Option<Self>
-    where
-        I: IntoIterator<Item = AuthorityId>,
-    {
-        let validators: Vec<AuthorityId> = validators.into_iter().collect();
-        let commitments: Vec<AuthorityId> = commitments.into_iter().collect();
-        if validators.is_empty() || commitments.is_empty() {
-            // No validators; the set would be empty.
-            // Or the validator and commitment set are improperly allocated
-            None
-        } else {
-            Some(Self {
-                validators,
-                commitments,
-                id,
-            })
-        }
-    }
-
-    /// Return a reference to the vec of validators.
-    pub fn validators(&self) -> &[AuthorityId] {
-        &self.validators
-    }
-
-    /// Return a reference to the vec of commitments.
-    pub fn commitments(&self) -> &[AuthorityId] {
-        &self.commitments
-    }
-
-    /// Return the validator set id.
-    pub fn id(&self) -> ValidatorSetId {
-        self.id
-    }
-
-    /// Return the number of validators in the set.
-    pub fn len(&self) -> usize {
-        self.validators.len()
-    }
+	/// Return the number of validators in the set.
+	pub fn len(&self) -> usize {
+		self.validators.len()
+	}
 }
 
 /// The index of an authority.
@@ -339,15 +342,15 @@ pub type MmrRootHash = H256;
 /// A consensus log item for BEEFY.
 #[derive(Decode, Encode, TypeInfo)]
 pub enum ConsensusLog<AuthorityId: Codec> {
-    /// The authorities have changed.
-    #[codec(index = 1)]
-    AuthoritiesChange(ValidatorSet<AuthorityId>),
-    /// Disable the authority with given index.
-    #[codec(index = 2)]
-    OnDisabled(AuthorityIndex),
-    /// MMR root hash.
-    #[codec(index = 3)]
-    MmrRoot(MmrRootHash),
+	/// The authorities have changed.
+	#[codec(index = 1)]
+	AuthoritiesChange(ValidatorSet<AuthorityId>),
+	/// Disable the authority with given index.
+	#[codec(index = 2)]
+	OnDisabled(AuthorityIndex),
+	/// MMR root hash.
+	#[codec(index = 3)]
+	MmrRoot(MmrRootHash),
 }
 
 /// BEEFY vote message.
@@ -357,12 +360,12 @@ pub enum ConsensusLog<AuthorityId: Codec> {
 // TODO: Remove `Signature` generic type, instead get it from `Id::Signature`.
 #[derive(Clone, Debug, Decode, Encode, PartialEq, TypeInfo)]
 pub struct VoteMessage<Number, Id, Signature> {
-    /// Commit to information extracted from a finalized block
-    pub commitment: Commitment<Number>,
-    /// Node authority id
-    pub id: Id,
-    /// Node signature
-    pub signature: Signature,
+	/// Commit to information extracted from a finalized block
+	pub commitment: Commitment<Number>,
+	/// Node authority id
+	pub id: Id,
+	/// Node signature
+	pub signature: Signature,
 }
 
 /// Proof of voter misbehavior on a given set id. Misbehavior/equivocation in
@@ -370,90 +373,90 @@ pub struct VoteMessage<Number, Id, Signature> {
 /// Proving is achieved by collecting the signed commitments of conflicting votes.
 #[derive(Clone, Debug, Decode, Encode, PartialEq, TypeInfo)]
 pub struct EquivocationProof<Number, Id, Signature> {
-    /// The first vote in the equivocation.
-    pub first: VoteMessage<Number, Id, Signature>,
-    /// The second vote in the equivocation.
-    pub second: VoteMessage<Number, Id, Signature>,
+	/// The first vote in the equivocation.
+	pub first: VoteMessage<Number, Id, Signature>,
+	/// The second vote in the equivocation.
+	pub second: VoteMessage<Number, Id, Signature>,
 }
 
 impl<Number, Id, Signature> EquivocationProof<Number, Id, Signature> {
-    /// Returns the authority id of the equivocator.
-    pub fn offender_id(&self) -> &Id {
-        &self.first.id
-    }
-    /// Returns the round number at which the equivocation occurred.
-    pub fn round_number(&self) -> &Number {
-        &self.first.commitment.block_number
-    }
-    /// Returns the set id at which the equivocation occurred.
-    pub fn set_id(&self) -> ValidatorSetId {
-        self.first.commitment.validator_set_id
-    }
+	/// Returns the authority id of the equivocator.
+	pub fn offender_id(&self) -> &Id {
+		&self.first.id
+	}
+	/// Returns the round number at which the equivocation occurred.
+	pub fn round_number(&self) -> &Number {
+		&self.first.commitment.block_number
+	}
+	/// Returns the set id at which the equivocation occurred.
+	pub fn set_id(&self) -> ValidatorSetId {
+		self.first.commitment.validator_set_id
+	}
 }
 
 /// Check a commitment signature by encoding the commitment and
 /// verifying the provided signature using the expected authority id.
 pub fn check_commitment_signature<Number, Id, MsgHash>(
-    commitment: &Commitment<Number>,
-    authority_id: &Id,
-    signature: &<Id as RuntimeAppPublic>::Signature,
+	commitment: &Commitment<Number>,
+	authority_id: &Id,
+	signature: &<Id as RuntimeAppPublic>::Signature,
 ) -> bool
 where
-    Id: BeefyAuthorityId<MsgHash>,
-    Number: Clone + Encode + PartialEq,
-    MsgHash: Hash,
+	Id: BeefyAuthorityId<MsgHash>,
+	Number: Clone + Encode + PartialEq,
+	MsgHash: Hash,
 {
-    let encoded_commitment = commitment.encode();
-    BeefyAuthorityId::<MsgHash>::verify(authority_id, signature, &encoded_commitment)
+	let encoded_commitment = commitment.encode();
+	BeefyAuthorityId::<MsgHash>::verify(authority_id, signature, &encoded_commitment)
 }
 
 /// Verifies the equivocation proof by making sure that both votes target
 /// different blocks and that its signatures are valid.
 pub fn check_equivocation_proof<Number, Id, MsgHash>(
-    report: &EquivocationProof<Number, Id, <Id as RuntimeAppPublic>::Signature>,
+	report: &EquivocationProof<Number, Id, <Id as RuntimeAppPublic>::Signature>,
 ) -> bool
 where
-    Id: BeefyAuthorityId<MsgHash> + PartialEq,
-    Number: Clone + Encode + PartialEq,
-    MsgHash: Hash,
+	Id: BeefyAuthorityId<MsgHash> + PartialEq,
+	Number: Clone + Encode + PartialEq,
+	MsgHash: Hash,
 {
-    let first = &report.first;
-    let second = &report.second;
+	let first = &report.first;
+	let second = &report.second;
 
-    // if votes
-    //   come from different authorities,
-    //   are for different rounds,
-    //   have different validator set ids,
-    //   or both votes have the same commitment,
-    //     --> the equivocation is invalid.
-    if first.id != second.id
-        || first.commitment.block_number != second.commitment.block_number
-        || first.commitment.validator_set_id != second.commitment.validator_set_id
-        || first.commitment.payload == second.commitment.payload
-    {
-        return false;
-    }
+	// if votes
+	//   come from different authorities,
+	//   are for different rounds,
+	//   have different validator set ids,
+	//   or both votes have the same commitment,
+	//     --> the equivocation is invalid.
+	if first.id != second.id ||
+		first.commitment.block_number != second.commitment.block_number ||
+		first.commitment.validator_set_id != second.commitment.validator_set_id ||
+		first.commitment.payload == second.commitment.payload
+	{
+		return false
+	}
 
-    // check signatures on both votes are valid
-    let valid_first = check_commitment_signature(&first.commitment, &first.id, &first.signature);
-    let valid_second =
-        check_commitment_signature(&second.commitment, &second.id, &second.signature);
+	// check signatures on both votes are valid
+	let valid_first = check_commitment_signature(&first.commitment, &first.id, &first.signature);
+	let valid_second =
+		check_commitment_signature(&second.commitment, &second.id, &second.signature);
 
-    return valid_first && valid_second;
+	return valid_first && valid_second
 }
 
 /// New BEEFY validator set notification hook.
 pub trait OnNewValidatorSet<AuthorityId> {
-    /// Function called by the pallet when BEEFY validator set changes.
-    fn on_new_validator_set(
-        validator_set: &ValidatorSet<AuthorityId>,
-        next_validator_set: &ValidatorSet<AuthorityId>,
-    );
+	/// Function called by the pallet when BEEFY validator set changes.
+	fn on_new_validator_set(
+		validator_set: &ValidatorSet<AuthorityId>,
+		next_validator_set: &ValidatorSet<AuthorityId>,
+	);
 }
 
 /// No-op implementation of [OnNewValidatorSet].
 impl<AuthorityId> OnNewValidatorSet<AuthorityId> for () {
-    fn on_new_validator_set(_: &ValidatorSet<AuthorityId>, _: &ValidatorSet<AuthorityId>) {}
+	fn on_new_validator_set(_: &ValidatorSet<AuthorityId>, _: &ValidatorSet<AuthorityId>) {}
 }
 
 /// An opaque type used to represent the key ownership proof at the runtime API
@@ -465,216 +468,173 @@ impl<AuthorityId> OnNewValidatorSet<AuthorityId> for () {
 #[derive(Decode, Encode, PartialEq, TypeInfo)]
 pub struct OpaqueKeyOwnershipProof(Vec<u8>);
 impl OpaqueKeyOwnershipProof {
-    /// Create a new `OpaqueKeyOwnershipProof` using the given encoded
-    /// representation.
-    pub fn new(inner: Vec<u8>) -> OpaqueKeyOwnershipProof {
-        OpaqueKeyOwnershipProof(inner)
-    }
+	/// Create a new `OpaqueKeyOwnershipProof` using the given encoded
+	/// representation.
+	pub fn new(inner: Vec<u8>) -> OpaqueKeyOwnershipProof {
+		OpaqueKeyOwnershipProof(inner)
+	}
 
-    /// Try to decode this `OpaqueKeyOwnershipProof` into the given concrete key
-    /// ownership proof type.
-    pub fn decode<T: Decode>(self) -> Option<T> {
-        codec::Decode::decode(&mut &self.0[..]).ok()
-    }
+	/// Try to decode this `OpaqueKeyOwnershipProof` into the given concrete key
+	/// ownership proof type.
+	pub fn decode<T: Decode>(self) -> Option<T> {
+		codec::Decode::decode(&mut &self.0[..]).ok()
+	}
 }
 
 sp_api::decl_runtime_apis! {
-    /// API necessary for BEEFY voters.
-    #[api_version(3)]
-    pub trait BeefyApi<AuthorityId> where
-        AuthorityId : Codec + RuntimeAppPublic,
-    {
-        /// Return the block number where BEEFY consensus is enabled/started
-        fn beefy_genesis() -> Option<NumberFor<Block>>;
+	/// API necessary for BEEFY voters.
+	#[api_version(3)]
+	pub trait BeefyApi<AuthorityId> where
+		AuthorityId : Codec + RuntimeAppPublic,
+	{
+		/// Return the block number where BEEFY consensus is enabled/started
+		fn beefy_genesis() -> Option<NumberFor<Block>>;
 
-        /// Return the current active BEEFY validator set
-        fn validator_set() -> Option<ValidatorSet<AuthorityId>>;
+		/// Return the current active BEEFY validator set
+		fn validator_set() -> Option<ValidatorSet<AuthorityId>>;
 
-        /// Submits an unsigned extrinsic to report an equivocation. The caller
-        /// must provide the equivocation proof and a key ownership proof
-        /// (should be obtained using `generate_key_ownership_proof`). The
-        /// extrinsic will be unsigned and should only be accepted for local
-        /// authorship (not to be broadcast to the network). This method returns
-        /// `None` when creation of the extrinsic fails, e.g. if equivocation
-        /// reporting is disabled for the given runtime (i.e. this method is
-        /// hardcoded to return `None`). Only useful in an offchain context.
-        fn submit_report_equivocation_unsigned_extrinsic(
-            equivocation_proof:
-                EquivocationProof<NumberFor<Block>, AuthorityId, <AuthorityId as RuntimeAppPublic>::Signature>,
-            key_owner_proof: OpaqueKeyOwnershipProof,
-        ) -> Option<()>;
+		/// Submits an unsigned extrinsic to report an equivocation. The caller
+		/// must provide the equivocation proof and a key ownership proof
+		/// (should be obtained using `generate_key_ownership_proof`). The
+		/// extrinsic will be unsigned and should only be accepted for local
+		/// authorship (not to be broadcast to the network). This method returns
+		/// `None` when creation of the extrinsic fails, e.g. if equivocation
+		/// reporting is disabled for the given runtime (i.e. this method is
+		/// hardcoded to return `None`). Only useful in an offchain context.
+		fn submit_report_equivocation_unsigned_extrinsic(
+			equivocation_proof:
+				EquivocationProof<NumberFor<Block>, AuthorityId, <AuthorityId as RuntimeAppPublic>::Signature>,
+			key_owner_proof: OpaqueKeyOwnershipProof,
+		) -> Option<()>;
 
-        /// Generates a proof of key ownership for the given authority in the
-        /// given set. An example usage of this module is coupled with the
-        /// session historical module to prove that a given authority key is
-        /// tied to a given staking identity during a specific session. Proofs
-        /// of key ownership are necessary for submitting equivocation reports.
-        /// NOTE: even though the API takes a `set_id` as parameter the current
-        /// implementations ignores this parameter and instead relies on this
-        /// method being called at the correct block height, i.e. any point at
-        /// which the given set id is live on-chain. Future implementations will
-        /// instead use indexed data through an offchain worker, not requiring
-        /// older states to be available.
-        fn generate_key_ownership_proof(
-            set_id: ValidatorSetId,
-            authority_id: AuthorityId,
-        ) -> Option<OpaqueKeyOwnershipProof>;
+		/// Generates a proof of key ownership for the given authority in the
+		/// given set. An example usage of this module is coupled with the
+		/// session historical module to prove that a given authority key is
+		/// tied to a given staking identity during a specific session. Proofs
+		/// of key ownership are necessary for submitting equivocation reports.
+		/// NOTE: even though the API takes a `set_id` as parameter the current
+		/// implementations ignores this parameter and instead relies on this
+		/// method being called at the correct block height, i.e. any point at
+		/// which the given set id is live on-chain. Future implementations will
+		/// instead use indexed data through an offchain worker, not requiring
+		/// older states to be available.
+		fn generate_key_ownership_proof(
+			set_id: ValidatorSetId,
+			authority_id: AuthorityId,
+		) -> Option<OpaqueKeyOwnershipProof>;
 
-        #[cfg(feature = "bls-experimental")]
-        /// Return a proof of knowledge for async secret sharing
-        fn read_share(who: AuthorityId) -> Option<Vec<u8>>;
+		// #[cfg(feature = "bls-experimental")]
+		/// Return a proof of knowledge for async secret sharing
+		fn read_share(who: AuthorityId) -> Option<Vec<u8>>;
 
-        #[cfg(feature = "bls-experimental")]
-        /// Return a public key commitment for the current round for the authority if one exists
-        fn read_commitment(who: AuthorityId) -> Option<AuthorityId>;
-    }
+		// #[cfg(feature = "bls-experimental")] 
+		/// Return a public key commitment for the current round for the authority if one exists
+		fn read_commitment(who: AuthorityId) -> Option<AuthorityId>;
+	}
 
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use sp_application_crypto::ecdsa::{self, Public};
-    use sp_core::crypto::{Pair, Wraps};
-    use sp_crypto_hashing::{blake2_256, keccak_256};
-    use sp_runtime::traits::{BlakeTwo256, Keccak256};
+	use super::*;
+	use sp_application_crypto::ecdsa::{self, Public};
+	use sp_core::crypto::{Pair, Wraps};
+	use sp_crypto_hashing::{blake2_256, keccak_256};
+	use sp_runtime::traits::{BlakeTwo256, Keccak256};
 
-    #[test]
-    #[cfg(not(feature = "bls-experimental"))]
-    fn validator_set() {
-        // Empty set not allowed.
-        assert_eq!(ValidatorSet::<Public>::new(vec![], 0), None);
+	#[test]
+	fn validator_set() {
+		// Empty set not allowed.
+		assert_eq!(ValidatorSet::<Public>::new(vec![], vec![], 0), None);
 
-        let alice = ecdsa::Pair::from_string("//Alice", None).unwrap();
-        let set_id = 0;
-        let validators = ValidatorSet::<Public>::new(vec![alice.public()], set_id).unwrap();
+		let alice = ecdsa::Pair::from_string("//Alice", None).unwrap();
+		let alice_stash = ecdsa::Pair::from_string("//AliceStash", None).unwrap();
+		let set_id = 0;
+		let validators = ValidatorSet::<Public>::new(
+			vec![alice.public()], 
+			vec![alice_stash.public()], 
+			set_id
+		).unwrap();
 
-        assert_eq!(validators.id(), set_id);
-        assert_eq!(validators.validators(), &vec![alice.public()]);
-    }
+		assert_eq!(validators.id(), set_id);
+		assert_eq!(validators.validators(), &vec![alice.public()]);
+		assert_eq!(validators.commitments(), &vec![alice_stash.public()]);
+	}
 
-    #[test]
-    #[cfg(feature = "bls-experimental")]
-    fn validator_set() {
-        // Empty set not allowed.
-        assert_eq!(ValidatorSet::<Public>::new(vec![], vec![], 0), None);
+	#[test]
+	fn ecdsa_beefy_verify_works() {
+		let msg = &b"test-message"[..];
+		let (pair, _) = ecdsa_crypto::Pair::generate();
 
-        let alice = ecdsa::Pair::from_string("//Alice", None).unwrap();
-        let alice_stash = ecdsa::Pair::from_string("//AliceStash", None).unwrap();
-        let set_id = 0;
-        let validators =
-            ValidatorSet::<Public>::new(vec![alice.public()], vec![alice_stash.public()], set_id)
-                .unwrap();
+		let keccak_256_signature: ecdsa_crypto::Signature =
+			pair.as_inner_ref().sign_prehashed(&keccak_256(msg)).into();
 
-        assert_eq!(validators.id(), set_id);
-        assert_eq!(validators.validators(), &vec![alice.public()]);
-        assert_eq!(validators.commitments(), &vec![alice_stash.public()]);
-    }
+		let blake2_256_signature: ecdsa_crypto::Signature =
+			pair.as_inner_ref().sign_prehashed(&blake2_256(msg)).into();
 
-    #[test]
-    fn ecdsa_beefy_verify_works() {
-        let msg = &b"test-message"[..];
-        let (pair, _) = ecdsa_crypto::Pair::generate();
+		// Verification works if same hashing function is used when signing and verifying.
+		assert!(BeefyAuthorityId::<Keccak256>::verify(&pair.public(), &keccak_256_signature, msg));
+		assert!(BeefyAuthorityId::<BlakeTwo256>::verify(
+			&pair.public(),
+			&blake2_256_signature,
+			msg
+		));
+		// Verification fails if distinct hashing functions are used when signing and verifying.
+		assert!(!BeefyAuthorityId::<Keccak256>::verify(&pair.public(), &blake2_256_signature, msg));
+		assert!(!BeefyAuthorityId::<BlakeTwo256>::verify(
+			&pair.public(),
+			&keccak_256_signature,
+			msg
+		));
 
-        let keccak_256_signature: ecdsa_crypto::Signature =
-            pair.as_inner_ref().sign_prehashed(&keccak_256(msg)).into();
+		// Other public key doesn't work
+		let (other_pair, _) = ecdsa_crypto::Pair::generate();
+		assert!(!BeefyAuthorityId::<Keccak256>::verify(
+			&other_pair.public(),
+			&keccak_256_signature,
+			msg,
+		));
+		assert!(!BeefyAuthorityId::<BlakeTwo256>::verify(
+			&other_pair.public(),
+			&blake2_256_signature,
+			msg,
+		));
+	}
 
-        let blake2_256_signature: ecdsa_crypto::Signature =
-            pair.as_inner_ref().sign_prehashed(&blake2_256(msg)).into();
+	#[test]
+	// #[cfg(feature = "bls-experimental")]
+	fn bls_beefy_verify_works() {
+		let msg = &b"test-message"[..];
+		let (pair, _) = bls_crypto::Pair::generate();
 
-        // Verification works if same hashing function is used when signing and verifying.
-        assert!(BeefyAuthorityId::<Keccak256>::verify(
-            &pair.public(),
-            &keccak_256_signature,
-            msg
-        ));
-        assert!(BeefyAuthorityId::<BlakeTwo256>::verify(
-            &pair.public(),
-            &blake2_256_signature,
-            msg
-        ));
-        // Verification fails if distinct hashing functions are used when signing and verifying.
-        assert!(!BeefyAuthorityId::<Keccak256>::verify(
-            &pair.public(),
-            &blake2_256_signature,
-            msg
-        ));
-        assert!(!BeefyAuthorityId::<BlakeTwo256>::verify(
-            &pair.public(),
-            &keccak_256_signature,
-            msg
-        ));
+		let signature: bls_crypto::Signature = pair.as_inner_ref().sign(&msg).into();
 
-        // Other public key doesn't work
-        let (other_pair, _) = ecdsa_crypto::Pair::generate();
-        assert!(!BeefyAuthorityId::<Keccak256>::verify(
-            &other_pair.public(),
-            &keccak_256_signature,
-            msg,
-        ));
-        assert!(!BeefyAuthorityId::<BlakeTwo256>::verify(
-            &other_pair.public(),
-            &blake2_256_signature,
-            msg,
-        ));
-    }
+		// Verification works if same hashing function is used when signing and verifying.
+		assert!(BeefyAuthorityId::<Keccak256>::verify(&pair.public(), &signature, msg));
 
-    #[test]
-    #[cfg(feature = "bls-experimental")]
-    fn bls_beefy_verify_works() {
-        let msg = &b"test-message"[..];
-        let (pair, _) = bls_crypto::Pair::generate();
+		// Other public key doesn't work
+		let (other_pair, _) = bls_crypto::Pair::generate();
+		assert!(!BeefyAuthorityId::<Keccak256>::verify(&other_pair.public(), &signature, msg,));
+	}
 
-        let signature: bls_crypto::Signature = pair.as_inner_ref().sign(&msg).into();
+	// #[test]
+	// // #[cfg(feature = "bls-experimental")]
+	// #[cfg(all(feature = "bls-experimental", feature = "full_crypto"))]
+	// fn ecdsa_bls_beefy_verify_works() {
+	// 	let msg = &b"test-message"[..];
+	// 	let (pair, _) = ecdsa_bls_crypto::Pair::generate();
 
-        // Verification works if same hashing function is used when signing and verifying.
-        assert!(BeefyAuthorityId::<Keccak256>::verify(
-            &pair.public(),
-            &signature,
-            msg
-        ));
+	// 	let signature: ecdsa_bls_crypto::Signature =
+	// 		pair.as_inner_ref().sign_with_hasher::<Keccak256>(&msg).into();
 
-        // Other public key doesn't work
-        let (other_pair, _) = bls_crypto::Pair::generate();
-        assert!(!BeefyAuthorityId::<Keccak256>::verify(
-            &other_pair.public(),
-            &signature,
-            msg,
-        ));
-    }
+	// 	// Verification works if same hashing function is used when signing and verifying.
+	// 	assert!(BeefyAuthorityId::<Keccak256>::verify(&pair.public(), &signature, msg));
 
-    #[test]
-    // #[cfg(feature = "bls-experimental")]
-    #[cfg(all(feature = "bls-experimental", feature = "full_crypto"))]
-    fn ecdsa_bls_beefy_verify_works() {
-        let msg = &b"test-message"[..];
-        let (pair, _) = ecdsa_bls_crypto::Pair::generate();
+	// 	// Verification doesn't work if we verify function provided by pair_crypto implementation
+	// 	assert!(!ecdsa_bls_crypto::Pair::verify(&signature, msg, &pair.public()));
 
-        let signature: ecdsa_bls_crypto::Signature = pair
-            .as_inner_ref()
-            .sign_with_hasher::<Keccak256>(&msg)
-            .into();
-
-        // Verification works if same hashing function is used when signing and verifying.
-        assert!(BeefyAuthorityId::<Keccak256>::verify(
-            &pair.public(),
-            &signature,
-            msg
-        ));
-
-        // Verification doesn't work if we verify function provided by pair_crypto implementation
-        assert!(!ecdsa_bls_crypto::Pair::verify(
-            &signature,
-            msg,
-            &pair.public()
-        ));
-
-        // Other public key doesn't work
-        let (other_pair, _) = ecdsa_bls_crypto::Pair::generate();
-        assert!(!BeefyAuthorityId::<Keccak256>::verify(
-            &other_pair.public(),
-            &signature,
-            msg,
-        ));
-    }
+	// 	// Other public key doesn't work
+	// 	let (other_pair, _) = ecdsa_bls_crypto::Pair::generate();
+	// 	assert!(!BeefyAuthorityId::<Keccak256>::verify(&other_pair.public(), &signature, msg,));
+	// }
 }

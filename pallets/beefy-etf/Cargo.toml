@@ -86,4 +86,3 @@ try-runtime = [
 	"pallet-timestamp/try-runtime",
 	"sp-runtime/try-runtime",
 ]
-bls-experimental = []

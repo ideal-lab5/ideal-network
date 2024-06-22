@@ -30,97 +30,77 @@ const WORKER_STATE_KEY: &[u8] = b"beefy_voter_state";
 const CURRENT_VERSION: u32 = 4;
 
 pub(crate) fn write_current_version<BE: AuxStore>(backend: &BE) -> Result<(), Error> {
-    debug!(target: LOG_TARGET, "🥩 write aux schema version {:?}", CURRENT_VERSION);
-    AuxStore::insert_aux(
-        backend,
-        &[(VERSION_KEY, CURRENT_VERSION.encode().as_slice())],
-        &[],
-    )
-    .map_err(|e| Error::Backend(e.to_string()))
+	debug!(target: LOG_TARGET, "🥩 write aux schema version {:?}", CURRENT_VERSION);
+	AuxStore::insert_aux(backend, &[(VERSION_KEY, CURRENT_VERSION.encode().as_slice())], &[])
+		.map_err(|e| Error::Backend(e.to_string()))
 }
 
 /// Write voter state.
 pub(crate) fn write_voter_state<B: BlockT, BE: AuxStore>(
-    backend: &BE,
-    state: &PersistedState<B>,
+	backend: &BE,
+	state: &PersistedState<B>,
 ) -> Result<(), Error> {
-    trace!(target: LOG_TARGET, "🥩 persisting {:?}", state);
-    AuxStore::insert_aux(
-        backend,
-        &[(WORKER_STATE_KEY, state.encode().as_slice())],
-        &[],
-    )
-    .map_err(|e| Error::Backend(e.to_string()))
+	trace!(target: LOG_TARGET, "🥩 persisting {:?}", state);
+	AuxStore::insert_aux(backend, &[(WORKER_STATE_KEY, state.encode().as_slice())], &[])
+		.map_err(|e| Error::Backend(e.to_string()))
 }
 
 fn load_decode<BE: AuxStore, T: Decode>(backend: &BE, key: &[u8]) -> Result<Option<T>, Error> {
-    match backend
-        .get_aux(key)
-        .map_err(|e| Error::Backend(e.to_string()))?
-    {
-        None => Ok(None),
-        Some(t) => T::decode(&mut &t[..])
-            .map_err(|e| Error::Backend(format!("BEEFY DB is corrupted: {}", e)))
-            .map(Some),
-    }
+	match backend.get_aux(key).map_err(|e| Error::Backend(e.to_string()))? {
+		None => Ok(None),
+		Some(t) => T::decode(&mut &t[..])
+			.map_err(|e| Error::Backend(format!("BEEFY DB is corrupted: {}", e)))
+			.map(Some),
+	}
 }
 
 /// Load or initialize persistent data from backend.
 pub(crate) fn load_persistent<B, BE>(backend: &BE) -> Result<Option<PersistedState<B>>, Error>
 where
-    B: BlockT,
-    BE: Backend<B>,
+	B: BlockT,
+	BE: Backend<B>,
 {
-    let version: Option<u32> = load_decode(backend, VERSION_KEY)?;
+	let version: Option<u32> = load_decode(backend, VERSION_KEY)?;
 
-    match version {
-        None => (),
-        Some(1) | Some(2) | Some(3) => (), // versions 1, 2 & 3 are obsolete and should be ignored
-        Some(4) => return load_decode::<_, PersistedState<B>>(backend, WORKER_STATE_KEY),
-        other => {
-            return Err(Error::Backend(format!(
-                "Unsupported BEEFY DB version: {:?}",
-                other
-            )))
-        }
-    }
+	match version {
+		None => (),
+		Some(1) | Some(2) | Some(3) => (), // versions 1, 2 & 3 are obsolete and should be ignored
+		Some(4) => return load_decode::<_, PersistedState<B>>(backend, WORKER_STATE_KEY),
+		other => return Err(Error::Backend(format!("Unsupported BEEFY DB version: {:?}", other))),
+	}
 
-    // No persistent state found in DB.
-    Ok(None)
+	// No persistent state found in DB.
+	Ok(None)
 }
 
 #[cfg(test)]
 pub(crate) mod tests {
-    use super::*;
-    use crate::tests::BeefyTestNet;
-    use sc_network_test::TestNetFactory;
+	use super::*;
+	use crate::tests::BeefyTestNet;
+	use sc_network_test::TestNetFactory;
 
-    // also used in tests.rs
-    pub fn verify_persisted_version<B: BlockT, BE: Backend<B>>(backend: &BE) -> bool {
-        let version: u32 = load_decode(backend, VERSION_KEY).unwrap().unwrap();
-        version == CURRENT_VERSION
-    }
+	// also used in tests.rs
+	pub fn verify_persisted_version<B: BlockT, BE: Backend<B>>(backend: &BE) -> bool {
+		let version: u32 = load_decode(backend, VERSION_KEY).unwrap().unwrap();
+		version == CURRENT_VERSION
+	}
 
-    #[tokio::test]
-    async fn should_load_persistent_sanity_checks() {
-        let mut net = BeefyTestNet::new(1);
-        let client = net.peer(0).client();
-        let backend = client.as_backend();
+	#[tokio::test]
+	async fn should_load_persistent_sanity_checks() {
+		let mut net = BeefyTestNet::new(1);
+		let backend = net.peer(0).client().as_backend();
 
-        // version not available in db -> None
-        assert_eq!(load_persistent(&*backend).unwrap(), None);
+		// version not available in db -> None
+		assert_eq!(load_persistent(&*backend).unwrap(), None);
 
-        // populate version in db
-        write_current_version(&*backend).unwrap();
-        // verify correct version is retrieved
-        assert_eq!(
-            load_decode(&*backend, VERSION_KEY).unwrap(),
-            Some(CURRENT_VERSION)
-        );
+		// populate version in db
+		write_current_version(&*backend).unwrap();
+		// verify correct version is retrieved
+		assert_eq!(load_decode(&*backend, VERSION_KEY).unwrap(), Some(CURRENT_VERSION));
 
-        // version is available in db but state isn't -> None
-        assert_eq!(load_persistent(&*backend).unwrap(), None);
+		// version is available in db but state isn't -> None
+		assert_eq!(load_persistent(&*backend).unwrap(), None);
 
-        // full `PersistedState` load is tested in `tests.rs`.
-    }
+		// full `PersistedState` load is tested in `tests.rs`.
+	}
 }
