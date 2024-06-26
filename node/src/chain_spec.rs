@@ -106,11 +106,13 @@ pub fn development_config() -> ChainSpec {
         // initial collators.
         vec![
             (
+                get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
                 get_account_id_from_seed::<sr25519::Public>("Alice"),
                 get_collator_keys_from_seed("Alice"),
                 get_beefy_etf_keys_from_seed("Alice"),
             ),
             (
+                get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
                 get_account_id_from_seed::<sr25519::Public>("Bob"),
                 get_collator_keys_from_seed("Bob"),
                 get_beefy_etf_keys_from_seed("Bob"),
@@ -159,11 +161,13 @@ pub fn local_testnet_config() -> ChainSpec {
         // initial collators.
         vec![
             (
+                get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
                 get_account_id_from_seed::<sr25519::Public>("Alice"),
                 get_collator_keys_from_seed("Alice"),
                 get_beefy_etf_keys_from_seed("Alice"),
             ),
             (
+                get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
                 get_account_id_from_seed::<sr25519::Public>("Bob"),
                 get_collator_keys_from_seed("Bob"),
                 get_beefy_etf_keys_from_seed("Bob"),
@@ -251,15 +255,15 @@ pub fn etf_genesis<E: EngineBLS>(
 }
 
 fn testnet_genesis(
-    invulnerables: Vec<(AccountId, AuraId, BeefyId)>,
+    initial_authorities: Vec<(AccountId, AccountId, AuraId, BeefyId)>,
     endowed_accounts: Vec<AccountId>,
     root: AccountId,
     id: ParaId,
 ) -> serde_json::Value {
     let (round_key, genesis_shares) = etf_genesis::<TinyBLS377>(
-        invulnerables
+        initial_authorities
             .iter()
-            .map(|x| x.2.clone())
+            .map(|x| x.3.clone())
             .collect::<Vec<_>>(),
         vec!["Alice", "Bob"],
     );
@@ -271,13 +275,13 @@ fn testnet_genesis(
             "parachainId": id,
         },
         "collatorSelection": {
-            "invulnerables": invulnerables.iter().cloned().map(|(acc, _, _)| acc).collect::<Vec<_>>(),
+            "invulnerables": initial_authorities.iter().cloned().map(|(acc, _, _, _)| acc).collect::<Vec<_>>(),
             "candidacyBond": EXISTENTIAL_DEPOSIT * 16,
         },
         "session": {
-            "keys": invulnerables
+            "keys": initial_authorities
                 .into_iter()
-                .map(|(acc, aura, beefy_etf)| {
+                .map(|(acc, _, aura, beefy_etf)| {
                     (
                         acc.clone(),                 // account id
                         acc,                         // validator id
