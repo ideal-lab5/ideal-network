@@ -181,85 +181,6 @@ impl frame_system::Config for Runtime {
     type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
-// parameter_types! {
-//     pub const AssetConversionPalletId: PalletId = PalletId(*b"py/ascon");
-//     pub const PoolSetupFee: Balance = 1 * DOLLARS; // should be more or equal to the existential deposit
-//     pub const MintMinLiquidity: Balance = 100;  // 100 is good enough when the main currency has 10-12 decimals.
-//     pub const LiquidityWithdrawalFee: Permill = Permill::from_percent(0);
-//     pub const Native: NativeOrWithId<u32> = NativeOrWithId::Native;
-// }
-
-// impl pallet_asset_conversion::Config for Runtime {
-//     type RuntimeEvent = RuntimeEvent;
-//     type Balance = u128;
-//     type HigherPrecisionBalance = sp_core::U256;
-//     type AssetKind = NativeOrWithId<u32>;
-//     type Assets = UnionOf<Balances, Assets, NativeFromLeft, NativeOrWithId<u32>, AccountId>;
-//     type PoolId = (Self::AssetKind, Self::AssetKind);
-//     type PoolLocator = Chain<
-//         WithFirstAsset<Native, AccountId, NativeOrWithId<u32>>,
-//         Ascending<AccountId, NativeOrWithId<u32>>,
-//     >;
-//     type PoolAssetId = <Self as pallet_assets::Config<Instance2>>::AssetId;
-//     type PoolAssets = PoolAssets;
-//     type PoolSetupFee = PoolSetupFee;
-//     type PoolSetupFeeAsset = Native;
-//     type PoolSetupFeeTarget = ResolveAssetTo<AssetConversionOrigin, Self::Assets>;
-//     type PalletId = AssetConversionPalletId;
-//     type LPFee = ConstU32<3>; // means 0.3%
-//     type LiquidityWithdrawalFee = LiquidityWithdrawalFee;
-//     type WeightInfo = pallet_asset_conversion::weights::SubstrateWeight<Runtime>;
-//     type MaxSwapPathLength = ConstU32<4>;
-//     type MintMinLiquidity = MintMinLiquidity;
-//     #[cfg(feature = "runtime-benchmarks")]
-//     type BenchmarkHelper = ();
-// }
-
-// parameter_types! {
-//     pub const AssetDeposit: Balance = 100 * UNIT;
-//     pub const ApprovalDeposit: Balance = 1 * UNIT;
-//     pub const StringLimit: u32 = 50;
-//     pub const MetadataDepositBase: Balance = 10 * UNIT;
-//     pub const MetadataDepositPerByte: Balance = 1 * UNIT;
-// }
-
-// impl pallet_assets::Config<Instance1> for Runtime {
-//     type RuntimeEvent = RuntimeEvent;
-//     type Balance = u128;
-//     type AssetId = u32;
-//     type AssetIdParameter = codec::Compact<u32>;
-//     type Currency = Balances;
-//     type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
-//     type ForceOrigin = EnsureRoot<AccountId>;
-//     type AssetDeposit = AssetDeposit;
-//     type AssetAccountDeposit = ConstU128<UNIT>;
-//     type MetadataDepositBase = MetadataDepositBase;
-//     type MetadataDepositPerByte = MetadataDepositPerByte;
-//     type ApprovalDeposit = ApprovalDeposit;
-//     type StringLimit = StringLimit;
-//     type Freezer = ();
-//     type Extra = ();
-//     type CallbackHandle = ();
-//     type WeightInfo = pallet_assets::weights::SubstrateWeight<Runtime>;
-//     type RemoveItemsLimit = ConstU32<1000>;
-//     #[cfg(feature = "runtime-benchmarks")]
-//     type BenchmarkHelper = ();
-// }
-
-// impl pallet_asset_conversion_tx_payment::Config for Runtime {
-//     type RuntimeEvent = RuntimeEvent;
-//     type Fungibles = Assets;
-//     type OnChargeAssetTransaction = pallet_asset_conversion_tx_payment::AssetConversionAdapter<
-//         Balances,
-//         AssetConversion,
-//         Native,
-//     >;
-// }
-
-// impl pallet_skip_feeless_payment::Config for Runtime {
-//     type RuntimeEvent = RuntimeEvent;
-// }
-
 impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
 where
     RuntimeCall: From<LocalCall>,
@@ -297,11 +218,6 @@ where
             pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(0),
             // TODO: Check this
             cumulus_primitives_storage_weight_reclaim::StorageWeightReclaim::<Runtime>::new(),
-            // pallet_skip_feeless_payment::SkipCheckIfFeeless::from(
-            //     pallet_asset_conversion_tx_payment::ChargeAssetTxPayment::<Runtime>::from(
-            //         tip, None,
-            //     ),
-            // ),
             // TODO: Check this
             frame_metadata_hash_extension::CheckMetadataHash::<Runtime>::new(false),
         );
@@ -333,14 +249,6 @@ where
 parameter_types! {
     pub const IndexDeposit: Balance = 1 * UNIT;
 }
-
-// impl pallet_indices::Config for Runtime {
-//     type AccountIndex = AccountIndex;
-//     type Currency = Balances;
-//     type Deposit = IndexDeposit;
-//     type RuntimeEvent = RuntimeEvent;
-//     type WeightInfo = pallet_indices::weights::SubstrateWeight<Runtime>;
-// }
 
 impl pallet_timestamp::Config for Runtime {
     /// A timestamp: milliseconds since the unix epoch.

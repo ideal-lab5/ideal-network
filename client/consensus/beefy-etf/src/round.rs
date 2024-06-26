@@ -21,11 +21,7 @@ use crate::LOG_TARGET;
 use codec::{Decode, Encode};
 use log::{debug, info};
 
-// #[cfg(feature = "bls-experimental")]
 use sp_consensus_beefy_etf::bls_crypto::{AuthorityId, Signature}; 
-
-// #[cfg(not(feature = "bls-experimental"))]
-// use sp_consensus_beefy_etf::ecdsa_crypto::{AuthorityId, Signature}; 
 
 use sp_consensus_beefy_etf::{
 	Commitment, EquivocationProof, SignedCommitment, ValidatorSet, ValidatorSetId, VoteMessage,

@@ -40,9 +40,6 @@ use pallet_session::historical as pallet_session_historical;
 
 use weights::ExtrinsicBaseWeight;
 
-// /// Import the template pallet.
-// pub use pallet_parachain_template;
-
 // TODO: check this
 pub type AccountIndex = u32;
 
@@ -89,11 +86,6 @@ pub type SignedExtra = (
     frame_system::CheckEra<Runtime>,
     frame_system::CheckNonce<Runtime>,
     frame_system::CheckWeight<Runtime>,
-    // pallet_skip_feeless_payment::SkipCheckIfFeeless<
-    //     Runtime,
-    //     (),
-    //     // pallet_asset_conversion_tx_payment::ChargeAssetTxPayment<Runtime>,
-    // >,
     // TODO: add next line or remove pallet_transaction_payment
     pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
     cumulus_primitives_storage_weight_reclaim::StorageWeightReclaim<Runtime>,
@@ -103,8 +95,6 @@ pub type SignedExtra = (
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic =
     generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
-
-// impl Checkable<ChainContext<Runtime>> for UncheckedExtrinsic {}
 
 /// Executive: handles dispatch to the various modules.
 pub type Executive = frame_executive::Executive<
@@ -250,7 +240,6 @@ construct_runtime!(
         ParachainInfo: parachain_info = 3,
 
         // Monetary stuff.
-        // AssetConversionTxPayment: pallet_asset_conversion_tx_payment = 9;
         Balances: pallet_balances = 10,
         TransactionPayment: pallet_transaction_payment = 11,
 
@@ -265,7 +254,6 @@ construct_runtime!(
         AuraExt: cumulus_pallet_aura_ext = 24,
         Offences: pallet_offences = 25,
         Historical: pallet_session_historical = 26,
-        // Indices: pallet_indices = 27,
 
         // XCM helpers.
         XcmpQueue: cumulus_pallet_xcmp_queue = 30,
@@ -273,9 +261,6 @@ construct_runtime!(
         CumulusXcm: cumulus_pallet_xcm = 32,
         MessageQueue: pallet_message_queue = 33,
 
-        // Template
-        // TemplatePallet: pallet_parachain_template = 50,
-        // Assets: pallet_assets = 39,
         Etf: pallet_etf = 40,
         // Beefy must be after Etf since we need the round key and public commitments to be available
         Beefy: pallet_beefy_etf = 41,
@@ -283,9 +268,6 @@ construct_runtime!(
         // refer to block<N>. See issue polkadot-fellows/runtimes#160 for details.
         Mmr: pallet_mmr = 42,
         MmrLeaf: pallet_beefy_mmr_etf = 43,
-
-        // AssetConversion: pallet_asset_conversion = 65,
-        // SkipFeelessPayment: pallet_skip_feeless_payment = 77,
     }
 );
 

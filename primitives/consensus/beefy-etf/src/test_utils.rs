@@ -15,8 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// #[cfg(feature = "bls-experimental")]
-// use crate::bls_bls_crypto;
 use crate::{
 	bls_crypto, AuthorityIdBound, BeefySignatureHasher, Commitment, EquivocationProof, Payload,
 	ValidatorSetId, VoteMessage,
@@ -52,18 +50,6 @@ pub trait BeefySignerAuthority<MsgHash: Hash>: AppPair {
 	fn sign_with_hasher(&self, message: &[u8]) -> <Self as AppCrypto>::Signature;
 }
 
-// impl<MsgHash> BeefySignerAuthority<MsgHash> for <bls_crypto::AuthorityId as AppCrypto>::Pair
-// where
-// 	MsgHash: Hash,
-// 	<MsgHash as Hash>::Output: Into<[u8; 32]>,
-// {
-// 	fn sign_with_hasher(&self, message: &[u8]) -> <Self as AppCrypto>::Signature {
-// 		let hashed_message = <MsgHash as Hash>::hash(message).into();
-// 		self.as_inner_ref().sign_prehashed(&hashed_message).into()
-// 	}
-// }
-
-// #[cfg(feature = "bls-experimental")]
 impl<MsgHash> BeefySignerAuthority<MsgHash> for <bls_crypto::AuthorityId as AppCrypto>::Pair
 where
 	MsgHash: Hash,

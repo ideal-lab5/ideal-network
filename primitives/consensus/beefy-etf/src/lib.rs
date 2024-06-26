@@ -137,8 +137,6 @@ pub mod ecdsa_crypto {
 ///
 /// Your code should use the above types as concrete types for all crypto related
 /// functionality.
-
-// #[cfg(feature = "bls-experimental")]
 pub mod bls_crypto {
 	use super::{AuthorityIdBound, BeefyAuthorityId, Hash, RuntimeAppPublic, KEY_TYPE};
 	use sp_application_crypto::{app_crypto, bls377};
@@ -232,18 +230,7 @@ pub const GENESIS_AUTHORITY_SET_ID: u64 = 0;
 /// A typedef for validator set id.
 pub type ValidatorSetId = u64;
 
-// /// A set of BEEFY authorities, a.k.a. validators.
-// #[cfg(not(feature =  "bls-experimental"))]
-// #[derive(Decode, Encode, Debug, PartialEq, Clone, TypeInfo)]
-// pub struct ValidatorSet<AuthorityId> {
-// 	/// Public keys of the validator set elements
-// 	validators: Vec<AuthorityId>,
-// 	/// Identifier of the validator set
-// 	id: ValidatorSetId,
-// }
-
 /// A set of BEEFY authorities, a.k.a. validators.
-// #[cfg(feature =  "bls-experimental")]
 #[derive(Decode, Encode, Debug, PartialEq, Clone, TypeInfo)]
 pub struct ValidatorSet<AuthorityId> {
 	/// Public keys of the validator set elements 
@@ -254,45 +241,6 @@ pub struct ValidatorSet<AuthorityId> {
 	id: ValidatorSetId,
 }
 
-// #[cfg(not(feature =  "bls-experimental"))]
-// impl<AuthorityId> ValidatorSet<AuthorityId> {
-// 	/// Return a validator set with the given validators and set id.
-// 	pub fn new<I>(validators: I, id: ValidatorSetId) -> Option<Self>
-// 	where
-// 		I: IntoIterator<Item = AuthorityId>,
-// 	{
-// 		let validators: Vec<AuthorityId> = validators.into_iter().collect();
-// 		if validators.is_empty() {
-// 			// No validators; the set would be empty.
-// 			None
-// 		} else {
-// 			Some(Self { validators, id })
-// 		}
-// 	}
-
-// 	/// Return a reference to the vec of validators.
-// 	pub fn validators(&self) -> &[AuthorityId] {
-// 		&self.validators
-// 	}
-
-// 	/// Return a reference to the vec of commitments
-// 	#[cfg(feature = "bls-experimental")]
-// 	pub fn commitments(&self) -> &[AuthorityId] {
-// 		&self.commitments
-// 	}
-
-// 	/// Return the validator set id.
-// 	pub fn id(&self) -> ValidatorSetId {
-// 		self.id
-// 	}
-
-// 	/// Return the number of validators in the set.
-// 	pub fn len(&self) -> usize {
-// 		self.validators.len()
-// 	}
-// }
-
-// #[cfg(feature = "bls-experimental")]
 impl<AuthorityId> ValidatorSet<AuthorityId> {
 	/// Return a validator set with the given validators and set id.
 	pub fn new<I>(validators: I, commitments: I, id: ValidatorSetId) -> Option<Self>
@@ -616,25 +564,4 @@ mod tests {
 		let (other_pair, _) = bls_crypto::Pair::generate();
 		assert!(!BeefyAuthorityId::<Keccak256>::verify(&other_pair.public(), &signature, msg,));
 	}
-
-	// #[test]
-	// // #[cfg(feature = "bls-experimental")]
-	// #[cfg(all(feature = "bls-experimental", feature = "full_crypto"))]
-	// fn ecdsa_bls_beefy_verify_works() {
-	// 	let msg = &b"test-message"[..];
-	// 	let (pair, _) = ecdsa_bls_crypto::Pair::generate();
-
-	// 	let signature: ecdsa_bls_crypto::Signature =
-	// 		pair.as_inner_ref().sign_with_hasher::<Keccak256>(&msg).into();
-
-	// 	// Verification works if same hashing function is used when signing and verifying.
-	// 	assert!(BeefyAuthorityId::<Keccak256>::verify(&pair.public(), &signature, msg));
-
-	// 	// Verification doesn't work if we verify function provided by pair_crypto implementation
-	// 	assert!(!ecdsa_bls_crypto::Pair::verify(&signature, msg, &pair.public()));
-
-	// 	// Other public key doesn't work
-	// 	let (other_pair, _) = ecdsa_bls_crypto::Pair::generate();
-	// 	assert!(!BeefyAuthorityId::<Keccak256>::verify(&other_pair.public(), &signature, msg,));
-	// }
 }
