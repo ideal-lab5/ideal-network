@@ -50,7 +50,7 @@ use sp_version::RuntimeVersion;
 use super::{
     AccountId, Balance, Beefy, Block, BlockNumber, Executive, Historical, InherentDataExt, Mmr,
     Nonce, ParachainSystem, Runtime, RuntimeCall, RuntimeGenesisConfig, SessionKeys, System,
-    TransactionPayment, SLOT_DURATION, VERSION,
+    TransactionPayment, SLOT_DURATION, VERSION, Beacon, RuntimeOrigin,
 };
 
 /// MMR helper types.
@@ -352,8 +352,15 @@ impl_runtime_apis! {
         //     None
         // }
 
-        fn submit_unsigned_pulse() -> Option<()> {
-            None
+        fn submit_unsigned_pulse(
+            signature_bytes: Vec<u8>,
+            block_number: BlockNumber
+        ) -> Option<()> {
+            Beacon::write_pulse(
+                RuntimeOrigin::none(),
+                signature_bytes,
+                block_number,
+            ).ok()
         }
 
     }

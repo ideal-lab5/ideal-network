@@ -262,8 +262,9 @@ construct_runtime!(
         MessageQueue: pallet_message_queue = 33,
 
         Etf: pallet_etf = 40,
+        Beacon: pallet_randomness_beacon = 41,
         // Beefy must be after Etf since we need the round key and public commitments to be available
-        Beefy: pallet_beefy_etf = 41,
+        Beefy: pallet_beefy_etf = 42,
         // MMR leaf construction must be after session in order to have a leaf's next_auth_set
         // refer to block<N>. See issue polkadot-fellows/runtimes#160 for details.
         Mmr: pallet_mmr = 42,

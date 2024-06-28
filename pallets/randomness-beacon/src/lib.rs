@@ -134,26 +134,26 @@ pub mod pallet {
 	#[pallet::pallet]
 	pub struct Pallet<T>(_);
 
-	// #[pallet::genesis_config]
-	// pub struct GenesisConfig<T: Config> {
-	// 	pub genesis_pulse: Pulse<BlockNumberFor<T>>,
-	// }
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		pub genesis_pulse: Pulse<BlockNumberFor<T>>,
+	}
 
-	// impl<T: Config> Default for GenesisConfig<T> {
-	// 	fn default() -> Self {
-	// 		Self { 
-	// 			genesis_pulse: Pulse::default(),
-	// 		}
-	// 	}
-	// }
+	impl<T: Config> Default for GenesisConfig<T> {
+		fn default() -> Self {
+			Self { 
+				genesis_pulse: Pulse::default(),
+			}
+		}
+	}
 
-	// #[pallet::genesis_build]
-	// impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
-	// 	fn build(&self) {
-	// 		Pallet::<T>::initialize(&self.genesis_pulse)
-	// 			.expect("The genesis pulse must be well formatted.");
-	// 	}
-	// }
+	#[pallet::genesis_build]
+	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
+		fn build(&self) {
+			Pallet::<T>::initialize(&self.genesis_pulse)
+				.expect("The genesis pulse must be well formatted.");
+		}
+	}
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -203,14 +203,14 @@ pub mod pallet {
 impl<T: Config> Pallet<T> {
 	/// initialize the genesis state for this pallet
 	fn initialize(genesis_pulse: &Pulse<BlockNumberFor<T>>) -> Result<(), Error<T>> {
-		let mut pulses = Pulses::<T>::get();
+		let mut pulses = <Pulses<T>>::get();
 		// check that it hasn't already been initialized
 		if !pulses.is_empty() {
 			return Err(Error::<T>::AlreadyInitialized);
 		}
 		pulses.try_push(genesis_pulse.clone())
 			.map_err(|_| Error::<T>::PulseOverflow)?;
-		Pulses::<T>::put(pulses);
+		<Pulses<T>>::put(pulses);
 		Ok(())
 	}
 
@@ -235,7 +235,7 @@ impl<T: Config> Pallet<T> {
 				let bounded_sig = 
 					BoundedVec::<u8, ConstU32<1024>>::try_from(raw_signature)
 						.map_err(|_| Error::<T>::InvalidSignature)?;
-				let pulses = Pulses::<T>::get();
+				let pulses = <Pulses<T>>::get();
 				// note: the pulses list cannot be empty (set on genesis)
 				let last_pulse = pulses[pulses.len() - 1].clone();
 				let pulse = Pulse::build_next(
@@ -243,10 +243,10 @@ impl<T: Config> Pallet<T> {
 					block_number, 
 					last_pulse
 				);
-				let mut pulses = Pulses::<T>::get();
+				let mut pulses = <Pulses<T>>::get();
 				pulses.try_push(pulse.clone())
 					.map_err(|_| Error::<T>::PulseOverflow)?;
-				Pulses::<T>::put(pulses);
+				<Pulses<T>>::put(pulses);
 				return Ok(());
 			} 
 	
