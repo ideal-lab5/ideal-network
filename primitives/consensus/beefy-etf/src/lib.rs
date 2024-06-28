@@ -529,7 +529,10 @@ sp_api::decl_runtime_apis! {
         fn read_commitment(who: AuthorityId) -> Option<AuthorityId>;
 
         // #[cfg(feature = "bls-experimental")]
-        fn submit_unsigned_pulse() -> Option<()>;
+        fn submit_unsigned_pulse(
+            signature_bytes: Vec<u8>,
+            block_number: NumberFor<Block>
+        ) -> Option<()>;
     }
 
 }

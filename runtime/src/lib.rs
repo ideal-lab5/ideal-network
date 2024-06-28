@@ -277,12 +277,13 @@ construct_runtime!(
         // TemplatePallet: pallet_parachain_template = 50,
         // Assets: pallet_assets = 39,
         Etf: pallet_etf = 40,
+        Beacon: pallet_randomness_beacon = 41,
         // Beefy must be after Etf since we need the round key and public commitments to be available
-        Beefy: pallet_beefy_etf = 41,
+        Beefy: pallet_beefy_etf = 42,
         // MMR leaf construction must be after session in order to have a leaf's next_auth_set
         // refer to block<N>. See issue polkadot-fellows/runtimes#160 for details.
-        Mmr: pallet_mmr = 42,
-        MmrLeaf: pallet_beefy_mmr_etf = 43,
+        Mmr: pallet_mmr = 43,
+        MmrLeaf: pallet_beefy_mmr_etf = 44,
 
         // AssetConversion: pallet_asset_conversion = 65,
         // SkipFeelessPayment: pallet_skip_feeless_payment = 77,

@@ -634,6 +634,13 @@ where
             VersionedFinalityProof::V1(ref sc) => sc.commitment.block_number,
         };
 
+        let binding = Vec::new();
+        let signature = match finality_proof {
+            VersionedFinalityProof::V1(ref sc) => sc.commitment.payload.get_raw(
+                &known_payloads::ETF_SIGNATURE
+            ).unwrap_or(&binding),
+        };
+
         if block_num <= self.persisted_state.voting_oracle.best_beefy_block {
             // we've already finalized this round before, short-circuit.
             return Ok(());
@@ -647,7 +654,12 @@ where
             .best_grandpa_block_header
             .clone();
         let best_hash = best_header.hash();
-        self.runtime.runtime_api().submit_unsigned_pulse(best_hash);
+        
+        self.runtime.runtime_api().submit_unsigned_pulse(
+            best_hash,
+            signature.clone(),
+            block_num,
+        );
 
         // Set new best BEEFY block number.
         self.persisted_state.set_best_beefy(block_num);
