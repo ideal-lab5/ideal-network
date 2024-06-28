@@ -527,6 +527,9 @@ sp_api::decl_runtime_apis! {
         #[cfg(feature = "bls-experimental")]
         /// Return a public key commitment for the current round for the authority if one exists
         fn read_commitment(who: AuthorityId) -> Option<AuthorityId>;
+
+        // #[cfg(feature = "bls-experimental")]
+        fn submit_unsigned_pulse() -> Option<()>;
     }
 
 }

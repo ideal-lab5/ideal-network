@@ -351,6 +351,11 @@ impl_runtime_apis! {
             }
             None
         }
+
+        fn submit_unsigned_pulse() -> Option<()> {
+            None
+        }
+
     }
 
     impl pallet_mmr::primitives::MmrApi<

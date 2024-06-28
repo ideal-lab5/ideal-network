@@ -642,6 +642,13 @@ where
         // Finalize inner round and update voting_oracle state.
         self.persisted_state.voting_oracle.finalize(block_num)?;
 
+        let best_header = self.persisted_state
+            .voting_oracle
+            .best_grandpa_block_header
+            .clone();
+        let best_hash = best_header.hash();
+        self.runtime.runtime_api().submit_unsigned_pulse(best_hash);
+
         // Set new best BEEFY block number.
         self.persisted_state.set_best_beefy(block_num);
         crate::aux_schema::write_voter_state(&*self.backend, &self.persisted_state)
