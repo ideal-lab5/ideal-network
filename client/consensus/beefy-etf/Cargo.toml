@@ -22,24 +22,24 @@ log = { workspace = true, default-features = true }
 parking_lot = "0.12.1"
 thiserror = { workspace = true }
 wasm-timer = "0.2.5"
-prometheus = { package = "substrate-prometheus-endpoint", git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-client-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-consensus = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-network = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-network-gossip = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-network-sync = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-utils = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-application-crypto = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-arithmetic = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-blockchain = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-consensus = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+prometheus = { package = "substrate-prometheus-endpoint", git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sc-client-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sc-consensus = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sc-network = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sc-network-gossip = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sc-network-sync = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sc-utils = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sp-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sp-application-crypto = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sp-arithmetic = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sp-blockchain = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sp-consensus = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
 sp-consensus-beefy-etf = { path = "../../../primitives/consensus/beefy-etf" }
-sp-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-crypto-hashing = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-keystore = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", features = ["bls-experimental"]}
-sp-mmr-primitives = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+sp-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sp-crypto-hashing = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sp-keystore = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", features = ["bls-experimental"]}
+sp-mmr-primitives = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sp-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
 tokio = "1.22.0"
 ark-serialize = { version = "0.4.0" }
 ark-bls12-377 = { version = "0.4.0", features = ["curve"], optional = true}
@@ -49,12 +49,12 @@ w3f-bls = { version = "0.1.3", optional = true }
 [dev-dependencies]
 serde = { workspace = true, default-features = true }
 tempfile = "3.1.0"
-sc-block-builder = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-network-test = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-consensus-grandpa = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-keyring = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-tracing = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-substrate-test-runtime-client = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+sc-block-builder = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sc-network-test = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sp-consensus-grandpa = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sp-keyring = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sp-tracing = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+substrate-test-runtime-client = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
 
 [features]
 # This feature adds BLS crypto primitives. It should not be used in production since

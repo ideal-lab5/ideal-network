@@ -863,7 +863,7 @@ where
         };
         let encoded_commitment = commitment.encode();
 
-        let signature =
+        let (etf_authority_id, signature) =
             match self.etf_extract(target_hash, authority_id.clone(), &encoded_commitment) {
                 Some(sig) => sig,
                 None => {
@@ -873,13 +873,13 @@ where
             };
 
         // it is a critical failure
-        // if there is no commitment available in the runtime
-        let etf_authority_id = self
-            .runtime
-            .runtime_api()
-            .read_commitment(target_hash, authority_id.clone())
-            .map_err(|_| Error::ConsensusReset)?
-            .unwrap();
+        // // if there is no commitment available in the runtime
+        // let etf_authority_id = self
+        //     .runtime
+        //     .runtime_api()
+        //     .read_commitment(target_hash, authority_id.clone())
+        //     .map_err(|_| Error::ConsensusReset)?
+        //     .unwrap();
 
         info!(
             target: LOG_TARGET,
@@ -954,7 +954,12 @@ where
     /// execute the ETF extract algorithm
     /// outputs a (threshold) IBE secret and corresponding DLEQ proof
     #[cfg(feature = "bls-experimental")]
-    fn etf_extract(&mut self, hash: B::Hash, id: AuthorityId, message: &[u8]) -> Option<Signature> {
+    fn etf_extract(
+        &mut self, 
+        hash: B::Hash, 
+        id: AuthorityId, 
+        message: &[u8]
+    ) -> Option<(AuthorityId, Signature)> {
         let runtime_api = self.runtime.runtime_api();
 
         info!(
@@ -970,12 +975,16 @@ where
                     .key_store
                     .etf_sign(&id, &pok_bytes, &message, validator_set.len() as u8)
                 {
-                    Ok(sig) => return Some(sig),
+                    Ok((pk, sig)) => return Some((pk, sig)),
                     Err(e) => error!(target: LOG_TARGET, "🎲 [ETF] Error signing: {:?}", e),
                 }
             }
         }
-        debug!(target: LOG_TARGET, "🎲 [ETF] extract failed with id: {:?} and message: {:?}", id, message);
+        debug!(
+            target: LOG_TARGET, 
+            "🎲 [ETF] extract failed with id: {:?} and message: {:?}", 
+            id, 
+            message);
 
         None
     }

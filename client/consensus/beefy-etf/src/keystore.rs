@@ -16,17 +16,30 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use sp_application_crypto::{key_types::BEEFY as BEEFY_KEY_TYPE, AppCrypto, RuntimeAppPublic};
-use sp_consensus_beefy_etf::{AuthorityIdBound, BeefyAuthorityId, BeefySignatureHasher};
+use sp_application_crypto::{
+    key_types::BEEFY as BEEFY_KEY_TYPE, 
+    AppCrypto, 
+    RuntimeAppPublic
+};
+use sp_consensus_beefy_etf::{
+    bls_crypto::AuthorityId as BeefyId,
+    AuthorityIdBound, 
+    BeefyAuthorityId, 
+    BeefySignatureHasher
+};
 use sp_core::ecdsa;
 #[cfg(feature = "bls-experimental")]
 use sp_core::{bls377, crypto::KeyTypeId, ecdsa_bls377};
 use sp_crypto_hashing::keccak_256;
 use sp_keystore::KeystorePtr;
 
+use sp_application_crypto::{ByteArray, UncheckedFrom};
+
 use codec::Decode;
 use log::{debug, warn};
 use std::marker::PhantomData;
+
+use w3f_bls::{DoublePublicKey, DoublePublicKeyScheme, SerializableToBytes};
 
 use crate::{error, LOG_TARGET};
 
@@ -222,7 +235,10 @@ impl<AuthorityId: AuthorityIdBound> BeefyKeystore<AuthorityId> {
         pok_bytes: &[u8],
         message: &[u8],
         threshold: u8,
-    ) -> Result<<AuthorityId as RuntimeAppPublic>::Signature, error::Error> {
+    ) -> Result<
+            (BeefyId, <AuthorityId as RuntimeAppPublic>::Signature),
+            error::Error
+        > {
         debug!(
             target: LOG_TARGET,
             "🎲 [ETF][etf_sign] Public: {:?}, pok_bytes: {:?}, message: {:?}, threshold: {:?}", public, pok_bytes, message, threshold);
@@ -233,7 +249,7 @@ impl<AuthorityId: AuthorityIdBound> BeefyKeystore<AuthorityId> {
 
         let public: bls377::Public = bls377::Public::try_from(public.as_slice()).unwrap();
         debug!(target: LOG_TARGET, "🎲 [ETF][etf_sign] Public: {:?}", public);
-        let sig = store
+        let (etf_pubkey_bytes, sig) = store
             .acss_recover(BEEFY_KEY_TYPE, &public, pok_bytes, message, threshold)
             .map_err(|e| {
                 log::error!(target: LOG_TARGET, "🎲 [ETF][etf_sign] Error: {:?}", e);
@@ -252,7 +268,16 @@ impl<AuthorityId: AuthorityIdBound> BeefyKeystore<AuthorityId> {
                     ))
                 })?;
 
-        Ok(signature)
+        // let etf_public: bls377::Public = bls377::Public::try_from(etf_pubkey_bytes.as_slice()).unwrap();
+        // let pubkey = <AuthorityId as RuntimeAppPublic>::from_raw_vec(etf_pubkey_bytes.as_slice());
+        // let npk = sp_runtime::app_crypto::bls377::Public::try_from(etf_pubkey_bytes.as_slice()).unwrap();
+        // let mut raw = [0u8; 144];
+		// // let pk = DoublePublicKeyScheme::into_double_public_key(&etf_pubkey_bytes.as_slice()).to_bytes();
+        // let pk = DoublePublicKey::from_bytes(&etf_pubkey_bytes.as_slice()).unwrap();
+		// raw.copy_from_slice(&pk.to_bytes());
+		// let npk = sp_core::bls::Public::unchecked_from(raw);
+        let beef: BeefyId = BeefyId::from(etf_pubkey_bytes);
+        Ok((beef, signature))
         // Err(error::Error::Signature(format!("invalid signature")))
     }
 }
