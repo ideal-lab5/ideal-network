@@ -1,19 +1,18 @@
-// This file is part of Substrate.
-
-// Copyright (C) Parity Technologies (UK) Ltd.
-// SPDX-License-Identifier: Apache-2.0
-
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// 	http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * Copyright 2024 by Ideal Labs, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 use std::vec;
 
@@ -39,7 +38,7 @@ use sp_state_machine::BasicExternalities;
 use crate as pallet_randomness_beacon;
 
 pub use sp_consensus_beefy_etf::{
-	bls_crypto::AuthorityId as BeefyId, mmr::BeefyDataProvider, ConsensusLog, BEEFY_ENGINE_ID,
+	bls_crypto::AuthorityId as BeefyId, mmr::BeefyDataProvider, 
 };
 
 impl_opaque_keys! {
@@ -80,24 +79,19 @@ impl pallet_session::Config for Test {
 	type WeightInfo = ();
 }
 
-pub type MmrLeaf = sp_consensus_beefy_etf::mmr::MmrLeaf<
-	frame_system::pallet_prelude::BlockNumberFor<Test>,
-	<Test as frame_system::Config>::Hash,
-	pallet_beefy_mmr::MerkleRootOf<Test>,
-	Vec<u8>,
->;
+// pub type MmrLeaf = sp_consensus_beefy_etf::mmr::MmrLeaf<
+// 	frame_system::pallet_prelude::BlockNumberFor<Test>,
+// 	<Test as frame_system::Config>::Hash,
+// 	pallet_beefy_mmr::MerkleRootOf<Test>,
+// 	Vec<u8>,
+// >;
 
 impl pallet_mmr::Config for Test {
 	const INDEXING_PREFIX: &'static [u8] = b"mmr";
-
 	type Hashing = Keccak256;
-
 	type LeafData = BeefyMmr;
-
 	type OnNewRoot = pallet_beefy_mmr::DepositBeefyDigest<Test>;
-
 	type WeightInfo = ();
-
 	type BlockHashProvider = pallet_mmr::DefaultBlockHashProvider<Test>;
 }
 

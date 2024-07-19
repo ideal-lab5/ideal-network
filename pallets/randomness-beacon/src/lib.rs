@@ -22,25 +22,22 @@ use serde::{Serialize, Deserialize};
 use frame_support::{
 	pallet_prelude::*,
 	traits::Get,
-	BoundedVec, Parameter,
+	BoundedVec,
 };
 
-use sp_runtime::traits::Member;
 use sp_std::prelude::*;
 use frame_system::pallet_prelude::*;
 
-use codec::{Codec, Decode, Encode};
+use codec::{Decode, Encode};
 use scale_info::TypeInfo;
 
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_serialize::CanonicalDeserialize;
 use w3f_bls::{DoublePublicKey, DoubleSignature, Message, SerializableToBytes, TinyBLS377};
-use sp_consensus_beefy_etf::BeefyAuthorityId;
 use sp_consensus_beefy_etf::{
-	Commitment, ValidatorSetId, ValidatorSet, VersionedFinalityProof, 
-	VoteMessage, BEEFY_ENGINE_ID, Payload, known_payloads,
+	Commitment, ValidatorSetId, Payload, known_payloads,
 };
 use sha3::{Digest, Sha3_512};
-use sp_runtime::traits::One;
+
 #[cfg(test)]
 mod mock;
 #[cfg(test)]
@@ -181,17 +178,15 @@ pub mod pallet {
 		#[pallet::call_index(0)]
 		#[pallet::weight(0)]
 		pub fn write_pulse(
-			origin: OriginFor<T>,
+			_origin: OriginFor<T>,
 			signature: Vec<u8>,
 			block_number: BlockNumberFor<T>,
 		) -> DispatchResult {
 			// do we want a signed origin? maybe...
-			// this would have to be received via XCM probably
 			let round_pk_bytes: Vec<u8> = <pallet_etf::Pallet<T>>::round_pubkey().to_vec();
 			let rk = DoublePublicKey::<TinyBLS377>::deserialize_compressed(
 				&round_pk_bytes[..]
 			).unwrap();
-			// same here, probably relayed via XCM
 			let validator_set_id = <pallet_beefy::Pallet<T>>::validator_set_id();
 			let _ = Self::try_add_pulse(signature, block_number, rk, validator_set_id)?;
 			Self::deposit_event(Event::PulseStored);
