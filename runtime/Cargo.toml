@@ -37,6 +37,7 @@ sp-consensus-beefy-etf = { path = "../primitives/consensus/beefy-etf", default-f
 pallet-beefy-etf = { path = "../pallets/beefy-etf",  default-features = false }
 pallet-beefy-mmr-etf = { path = "../pallets/beefy-mmr-etf",  default-features = false }
 pallet-etf = { path = "../pallets/etf", default-features = false}
+pallet-randomness-beacon = { path = '../pallets/randomness-beacon', default-features = false }
 
 # Substrate / FRAME
 frame-benchmarking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", default-features = false, optional = true }
@@ -160,6 +161,7 @@ std = [
 	"xcm/std",
 	"sp-consensus-beefy-etf/std",
 	"pallet-etf/std",
+	"pallet-randomness-beacon/std",
 	"pallet-beefy-mmr-etf/std",
 	"pallet-beefy-etf/std",
 ]

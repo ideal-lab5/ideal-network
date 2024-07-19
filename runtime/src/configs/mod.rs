@@ -475,6 +475,11 @@ impl pallet_etf::Config for Runtime {
     type MaxAuthorities = MaxAuthorities;
 }
 
+impl pallet_randomness_beacon::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type MaxPulses = ConstU32<1024>;
+} 
+
 parameter_types! {
     // TODO: get `EpochDuration` right
     pub const EpochDuration: u64 = 10;
