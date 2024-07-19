@@ -195,11 +195,11 @@ pub fn local_testnet_config() -> ChainSpec {
     .build()
 }
 
+
 /// Helper function to prepare initial secrets and resharing for ETF conensus
 /// return a vec of (authority id, resharing, pubkey commitment) along with ibe public key against the master secret
 pub fn etf_genesis<E: EngineBLS>(
     initial_authorities: Vec<BeefyId>,
-    seeds: Vec<&str>,
 ) -> (Vec<u8>, Vec<(BeefyId, Vec<u8>)>) {
     let msk_prime = E::Scalar::rand(&mut OsRng);
     let keypair = w3f_bls::KeypairVT::<E>::generate(&mut OsRng);
@@ -230,28 +230,19 @@ pub fn etf_genesis<E: EngineBLS>(
                 .collect::<Vec<_>>(),
             initial_authorities.len() as u8, // threshold = full set of authorities for now
             &mut OsRng,
-        )
-        .unwrap();
+        ).unwrap();
 
-    let resharings = initial_authorities
+	let serialized_resharings = initial_authorities
         .iter()
         .enumerate()
         .map(|(idx, _)| {
             let pok = &genesis_resharing[idx].1;
             let mut bytes = Vec::new();
             pok.serialize_compressed(&mut bytes).unwrap();
-
-            let seed = seeds[idx];
-            let test = get_pair_from_seed::<BeefyId>(seed);
-            let t = sp_core::bls::Pair::<TinyBLS377>::from(test);
-            let o = t
-                .acss_recover(&bytes, initial_authorities.len() as u8)
-                .expect("genesis shares should be well formatted");
-            let etf_id = BeefyId::from(o.public());
-            (etf_id, bytes)
+            (initial_authorities[idx].clone(), bytes)
         })
         .collect::<Vec<_>>();
-    (double_public_bytes, resharings)
+    (double_public_bytes, serialized_resharings)
 }
 
 fn testnet_genesis(
@@ -261,11 +252,9 @@ fn testnet_genesis(
     id: ParaId,
 ) -> serde_json::Value {
     let (round_key, genesis_shares) = etf_genesis::<TinyBLS377>(
-        initial_authorities
-            .iter()
+        initial_authorities.iter()
             .map(|x| x.3.clone())
             .collect::<Vec<_>>(),
-        vec!["Alice", "Bob"],
     );
     serde_json::json!({
         "balances": {

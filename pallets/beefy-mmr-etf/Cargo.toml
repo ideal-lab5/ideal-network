@@ -17,24 +17,24 @@ codec = { package = "parity-scale-codec", version = "3.6.1", default-features = 
 log = { workspace = true }
 scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
 serde = { optional = true, workspace = true, default-features = true }
-binary-merkle-tree = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
-frame-support = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
-frame-system = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+binary-merkle-tree = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", default-features = false }
+frame-support = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", default-features = false }
+frame-system = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", default-features = false }
 pallet-beefy = { package = "pallet-beefy-etf", path = "../beefy-etf", default-features = false }
-pallet-mmr = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
-pallet-session = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
-# sp-consensus-beefy-etf = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false, features = ["bls-experimental"]}
+pallet-mmr = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", default-features = false }
+pallet-session = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", default-features = false }
+# sp-consensus-beefy-etf = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", default-features = false, features = ["bls-experimental"]}
 sp-consensus-beefy-etf = { path = "../../primitives/consensus/beefy-etf", default-features = false, features = ["bls-experimental"]}
-sp-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
-sp-io = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
-sp-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
-sp-std = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
-sp-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
-sp-state-machine = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+sp-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", default-features = false }
+sp-io = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", default-features = false }
+sp-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", default-features = false }
+sp-std = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", default-features = false }
+sp-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", default-features = false }
+sp-state-machine = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", default-features = false }
 
 [dev-dependencies]
 array-bytes = "6.1"
-sp-staking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+sp-staking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
 pallet-etf = { path = "../etf" }
 
 [features]

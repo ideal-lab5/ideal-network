@@ -21,12 +21,12 @@ serde = { features = ["derive"], workspace = true, default-features = true }
 thiserror = { workspace = true }
 sc-consensus-beefy-etf = { path = "..", features = ["bls-experimental"] }
 sp-consensus-beefy-etf = { path = "../../../../primitives/consensus/beefy-etf", features = ["bls-experimental"] }
-sc-rpc = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+sc-rpc = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sp-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
+sp-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
 
 [dev-dependencies]
 serde_json = { workspace = true, default-features = true }
-sc-rpc = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", features = ["test-helpers"] }
-substrate-test-runtime-client = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+sc-rpc = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey", features = ["test-helpers"] }
+substrate-test-runtime-client = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/pubkey" }
 tokio = { version = "1.22.0", features = ["macros"] }

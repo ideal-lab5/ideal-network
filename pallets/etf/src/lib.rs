@@ -61,15 +61,19 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	/// publicly verifiable shares for the current round (a resharing)
+	/// todo: this should be a StorageMap instead
+	/// shares will be fetched based on BeefyId (not the one derived from acss recover)
+	/// when verifying sigs, workers should query this storage map
+	/// they can ensure that the public key that sent a signature is valid this way
 	#[pallet::storage]
 	pub type Shares<T: Config> = 
 		StorageValue<_, BoundedVec<BoundedVec<u8, ConstU32<1024>>, T::MaxAuthorities>, ValueQuery>;
 
-	/// public commitments of the the expected validator to etf pubkey
-	/// assumes order follows the same as the Authorities StorageValue 
-	#[pallet::storage]
-	pub type Commitments<T: Config> = 
-		StorageValue<_, BoundedVec<T::BeefyId, T::MaxAuthorities>, ValueQuery>;
+	// /// public commitments of the the expected validator to etf pubkey
+	// /// assumes order follows the same as the Authorities StorageValue 
+	// #[pallet::storage]
+	// pub type Commitments<T: Config> = 
+	// 	StorageValue<_, BoundedVec<T::BeefyId, T::MaxAuthorities>, ValueQuery>;
 
 	/// the public key for the round (or rounds)
 	#[pallet::storage]
@@ -141,15 +145,19 @@ impl<T: Config> Pallet<T> {
 			).expect("There should be the correct number of genesis resharings");
 		<Shares<T>>::put(bounded_shares);
 
-		let bounded_commitments =
-			BoundedVec::<T::BeefyId, T::MaxAuthorities>::try_from(
-				genesis_resharing.iter()
-					.map(|g| g.0.clone())
-					.collect::<Vec<_>>()
-			).map_err(|_| ())?;
+		// let bounded_commitments =
+		// 	BoundedVec::<T::BeefyId, T::MaxAuthorities>::try_from(
+		// 		genesis_resharing.iter()
+		// 			.map(|g| g.0.clone())
+		// 			.collect::<Vec<_>>()
+		// 	).map_err(|_| ())?;
 
-		Commitments::<T>::put(bounded_commitments);
+		// Commitments::<T>::put(bounded_commitments);
 		Ok(())
+	}
+
+	pub fn round_pubkey() -> BoundedVec<u8, ConstU32<144>> {
+		RoundPublic::<T>::get()
 	}
 }
 
@@ -158,9 +166,11 @@ pub trait RoundCommitmentProvider<BeefyId, MaxAuthorities> {
 	fn get() -> BoundedVec<BeefyId, MaxAuthorities>;
 }
 
+// TODO: deprecate
 impl<T: Config> RoundCommitmentProvider<T::BeefyId, T::MaxAuthorities> for Pallet<T> {
 
 	fn get() -> BoundedVec<T::BeefyId, T::MaxAuthorities> {
-		Commitments::<T>::get()
+		// Commitments::<T>::get()
+		BoundedVec::new()
 	}
 }

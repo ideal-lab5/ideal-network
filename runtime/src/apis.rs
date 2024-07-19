@@ -340,17 +340,22 @@ impl_runtime_apis! {
             None
         }
 
-        fn read_commitment(who: BeefyId) -> Option<BeefyId> {
-            let authorities = pallet_beefy_etf::Authorities::<Runtime>::get();
-            if let Some(at) = authorities.iter().position(|auth| auth.eq(&who)) {
-                let commitments = pallet_etf::Commitments::<Runtime>::get();
-                if at as usize >= commitments.len() {
-                    return None;
-                }
-                return Some(commitments[at as usize].clone());
-            }
+        // fn read_commitment(who: BeefyId) -> Option<BeefyId> {
+        //     let authorities = pallet_beefy_etf::Authorities::<Runtime>::get();
+        //     if let Some(at) = authorities.iter().position(|auth| auth.eq(&who)) {
+        //         let commitments = pallet_etf::Commitments::<Runtime>::get();
+        //         if at as usize >= commitments.len() {
+        //             return None;
+        //         }
+        //         return Some(commitments[at as usize].clone());
+        //     }
+        //     None
+        // }
+
+        fn submit_unsigned_pulse() -> Option<()> {
             None
         }
+
     }
 
     impl pallet_mmr::primitives::MmrApi<

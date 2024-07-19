@@ -366,9 +366,15 @@ impl<T: Config> Pallet<T> {
 		);
 		Ok(())
 	}
+
 }
 
 impl<T: Config> Pallet<T> {
+
+	/// Return the current validator set id
+	pub fn validator_set_id() -> sp_consensus_beefy_etf::ValidatorSetId {
+		<ValidatorSetId<T>>::get()
+	}
 
 	/// Return the current active BEEFY validator set.
 	pub fn validator_set() -> Option<ValidatorSet<T::BeefyId>> {

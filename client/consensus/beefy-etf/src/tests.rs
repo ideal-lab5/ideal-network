@@ -328,9 +328,9 @@ sp_api::mock_impl_runtime_apis! {
 			None
 		}
 
-		fn read_commitment(_who: AuthorityId) -> Option<AuthorityId> {
-			None
-		}
+		// fn read_commitment(_who: AuthorityId) -> Option<AuthorityId> {
+		// 	None
+		// }
 	}
 
 	impl MmrApi<Block, MmrRootHash, NumberFor<Block>> for RuntimeApi {

@@ -621,18 +621,38 @@ where
 			VersionedFinalityProof::V1(ref sc) => sc.commitment.block_number,
 		};
 
-		if block_num <= self.persisted_state.voting_oracle.best_beefy_block {
-			// we've already finalized this round before, short-circuit.
-			return Ok(())
-		}
+        let binding = Vec::new();
+        let signature = match finality_proof {
+            VersionedFinalityProof::V1(ref sc) => sc.commitment.payload.get_raw(
+                &known_payloads::ETF_SIGNATURE
+            ).unwrap_or(&binding),
+        };
+
+        if block_num <= self.persisted_state.voting_oracle.best_beefy_block {
+            // we've already finalized this round before, short-circuit.
+            return Ok(());
+        }
 
 		// Finalize inner round and update voting_oracle state.
 		self.persisted_state.voting_oracle.finalize(block_num)?;
 
-		// Set new best BEEFY block number.
-		self.persisted_state.set_best_beefy(block_num);
-		crate::aux_schema::write_voter_state(&*self.backend, &self.persisted_state)
-			.map_err(|e| Error::Backend(e.to_string()))?;
+        let best_header = self.persisted_state
+            .voting_oracle
+            .best_grandpa_block_header
+            .clone();
+        let best_hash = best_header.hash();
+        
+        // TODO
+        self.runtime.runtime_api().submit_unsigned_pulse(
+            best_hash,
+            // signature.clone(),
+            // block_num,
+        );
+
+        // Set new best BEEFY block number.
+        self.persisted_state.set_best_beefy(block_num);
+        crate::aux_schema::write_voter_state(&*self.backend, &self.persisted_state)
+            .map_err(|e| Error::Backend(e.to_string()))?;
 
 		metric_set!(self.metrics, beefy_best_block, block_num);
 
@@ -809,25 +829,42 @@ where
 		let commitment = Commitment { payload, block_number: target_number, validator_set_id };
 		let encoded_commitment = commitment.encode();
 
-		let signature = match self.etf_extract(
-			target_hash, 
-			authority_id.clone(), 
-			&encoded_commitment,
-		) {
-			Some(sig) => sig,
-			None => {
-				warn!(target: LOG_TARGET, "🎲 Error calculating ETF signature");
-				return Ok(None)
-			},
-		};
+		// let signature = match self.etf_extract(
+		// 	target_hash, 
+		// 	authority_id.clone(), 
+		// 	&encoded_commitment,
+		// ) {
+		// 	Some(sig) => sig,
+		// 	None => {
+		// 		warn!(target: LOG_TARGET, "🎲 Error calculating ETF signature");
+		// 		return Ok(None)
+		// 	},
+		// };
 		
-		// it is a critical failure
-		// if there is no commitment available in the runtime
-		let etf_authority_id = self.runtime.runtime_api()
-			.read_commitment(target_hash, authority_id.clone())
-			.map_err(|_| Error::ConsensusReset)?
-			.unwrap();
+		// // it is a critical failure
+		// // if there is no commitment available in the runtime
+		// let etf_authority_id = self.runtime.runtime_api()
+		// 	.read_commitment(target_hash, authority_id.clone())
+		// 	.map_err(|_| Error::ConsensusReset)?
+		// 	.unwrap();
 
+        let (etf_authority_id, signature) =
+            match self.etf_extract(target_hash, authority_id.clone(), &encoded_commitment) {
+                Some(sig) => sig,
+                None => {
+                    error!(target: LOG_TARGET, "🎲 Error calculating ETF signature");
+                    return Ok(None);
+                }
+            };
+
+        // it is a critical failure
+        // // if there is no commitment available in the runtime
+        // let etf_authority_id = self
+        //     .runtime
+        //     .runtime_api()
+        //     .read_commitment(target_hash, authority_id.clone())
+        //     .map_err(|_| Error::ConsensusReset)?
+        //     .unwrap();
 		info!(
 			target: LOG_TARGET,
 			"🎲 Produced signature using {:?}, is_valid: {:?}",
@@ -894,34 +931,68 @@ where
 		}
 	}
 
-	/// execute the ETF extract algorithm
-	/// outputs a (threshold) IBE secret and corresponding DLEQ proof
-	#[cfg(feature = "bls-experimental")]
-	fn etf_extract(
-		&mut self,
-		hash: B::Hash,
-		id: AuthorityId,
-		message: &[u8]
-	) -> Option<Signature> {
-		let runtime_api = self.runtime.runtime_api();
+	// /// execute the ETF extract algorithm
+	// /// outputs a (threshold) IBE secret and corresponding DLEQ proof
+	// #[cfg(feature = "bls-experimental")]
+	// fn etf_extract(
+	// 	&mut self,
+	// 	hash: B::Hash,
+	// 	id: AuthorityId,
+	// 	message: &[u8]
+	// ) -> Option<Signature> {
+	// 	let runtime_api = self.runtime.runtime_api();
 
-		info!(
-			target: LOG_TARGET,
-			"🎲 run ACSS recovery at best grandpa: #{:?}.",
-			hash
-		);
-		if let Some(Some(validator_set)) = runtime_api.validator_set(hash).ok() {
-			if let Some(Some(pok_bytes)) = runtime_api.read_share(hash, id.clone()).ok() {
-				if let Ok(sig)  = self.key_store.etf_sign(
-					&id, 
-					&pok_bytes, 
-					&message, validator_set.len() as u8
-				) {
-					return Some(sig);
-				}
-			}
-		}
+	// 	info!(
+	// 		target: LOG_TARGET,
+	// 		"🎲 run ACSS recovery at best grandpa: #{:?}.",
+	// 		hash
+	// 	);
+	// 	if let Some(Some(validator_set)) = runtime_api.validator_set(hash).ok() {
+	// 		if let Some(Some(pok_bytes)) = runtime_api.read_share(hash, id.clone()).ok() {
+	// 			if let Ok(sig)  = self.key_store.etf_sign(
+	// 				&id, 
+	// 				&pok_bytes, 
+	// 				&message, validator_set.len() as u8
+	// 			) {
+	// 				return Some(sig);
+	// 			}
+	// 		}
+	// 	}
 
+    /// execute the ETF extract algorithm
+    /// outputs a (threshold) IBE secret and corresponding DLEQ proof
+    #[cfg(feature = "bls-experimental")]
+    fn etf_extract(
+        &mut self, 
+        hash: B::Hash, 
+        id: AuthorityId, 
+        message: &[u8]
+    ) -> Option<(AuthorityId, Signature)> {
+        let runtime_api = self.runtime.runtime_api();
+
+        info!(
+            target: LOG_TARGET,
+            "🎲 run ACSS recovery at best grandpa: #{:?}.",
+            hash
+        );
+        if let Some(Some(validator_set)) = runtime_api.validator_set(hash).ok() {
+            debug!(target: LOG_TARGET, "🎲 [ETF] validator_set: {:?}", validator_set);
+            if let Some(Some(pok_bytes)) = runtime_api.read_share(hash, id.clone()).ok() {
+                debug!(target: LOG_TARGET, "🎲 [ETF] pok_bytes: {:?}", pok_bytes);
+                match self
+                    .key_store
+                    .etf_sign(&id, &pok_bytes, &message, validator_set.len() as u8)
+                {
+                    Ok((pk, sig)) => return Some((pk, sig)),
+                    Err(e) => error!(target: LOG_TARGET, "🎲 [ETF] Error signing: {:?}", e),
+                }
+            }
+        }
+        debug!(
+            target: LOG_TARGET, 
+            "🎲 [ETF] extract failed with id: {:?} and message: {:?}", 
+            id, 
+            message);
 		None
 	}
 
