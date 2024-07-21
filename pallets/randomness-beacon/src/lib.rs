@@ -50,7 +50,6 @@ pub type OpaqueSignature = BoundedVec<u8, ConstU32<1024>>;
 #[derive(
 	Default, Clone, Eq, PartialEq, RuntimeDebugNoBound, 
 	Encode, Decode, TypeInfo, MaxEncodedLen, Serialize, Deserialize)]
-// can add timestamp fields and such here (NIST)
 pub struct PulseHeader<BN: core::fmt::Debug> {
 	pub block_number: BN,
 	pub hash_prev: BoundedVec<u8, ConstU32<1024>>
@@ -78,7 +77,7 @@ impl<BN: core::fmt::Debug> Pulse<BN> {
 		signature: OpaqueSignature,
 		block_number: BN,
 		prev: Pulse<BN>,
-	) -> Self {		
+	) -> Self {
 		let mut hasher = Sha3_512::new();
 		hasher.update(prev.body.double_sig.to_vec());
 		let hash_prev = hasher.finalize();
@@ -158,6 +157,7 @@ pub mod pallet {
 		InvalidOrigin,
 		/// the signature could not be verified
 		InvalidSignature,
+		SignatureNotDeserializable,
 		AlreadyInitialized,
 		/// the bounded runtime storage has reached its limit
 		PulseOverflow,
@@ -188,7 +188,12 @@ pub mod pallet {
 				&round_pk_bytes[..]
 			).unwrap();
 			let validator_set_id = <pallet_beefy::Pallet<T>>::validator_set_id();
-			let _ = Self::try_add_pulse(signature, block_number, rk, validator_set_id)?;
+			let _ = Self::try_add_pulse(
+				signature, 
+				block_number, 
+				rk, 
+				validator_set_id
+			)?;
 			Self::deposit_event(Event::PulseStored);
 			Ok(())
 		}
@@ -226,10 +231,12 @@ impl<T: Config> Pallet<T> {
 				block_number: block_number, 
 				validator_set_id,
 			};
-			if sig.verify(&Message::new(b"", &commitment.encode()), &rk) {	
+			let v = sig.verify(&Message::new(b"", &commitment.encode()), &rk);
+			panic!("{:?}", v);
+			if sig.verify(&Message::new(b"", &commitment.encode()), &rk) {
 				let bounded_sig = 
 					BoundedVec::<u8, ConstU32<1024>>::try_from(raw_signature)
-						.map_err(|_| Error::<T>::InvalidSignature)?;
+						.map_err(|_| Error::<T>::InvalidSignature)?; // shouldn't ever happen?
 				let pulses = <Pulses<T>>::get();
 				// note: the pulses list cannot be empty (set on genesis)
 				let last_pulse = pulses[pulses.len() - 1].clone();
@@ -243,11 +250,11 @@ impl<T: Config> Pallet<T> {
 					.map_err(|_| Error::<T>::PulseOverflow)?;
 				<Pulses<T>>::put(pulses);
 				return Ok(());
-			} 
-	
+			} else {
+				return Err(Error::<T>::InvalidSignature);
+			}
 		}
 
-		
-		Err(Error::<T>::InvalidSignature)
+		Err(Error::<T>::SignatureNotDeserializable)
 	}
 }

@@ -55,7 +55,7 @@ construct_runtime!(
 		System: frame_system,
 		Session: pallet_session,
 		Mmr: pallet_mmr,
-        RandomnessBeacon: pallet_randomness_beacon,
+        Beacon: pallet_randomness_beacon,
 		Etf: pallet_etf,
 		Beefy: pallet_beefy,
 		BeefyMmr: pallet_beefy_mmr,

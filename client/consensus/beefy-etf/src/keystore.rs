@@ -243,18 +243,6 @@ impl<AuthorityId: AuthorityIdBound> BeefyKeystore<AuthorityId> {
                 ))
             })?;
 
-		// let sig = store.acss_recover(
-		// 	BEEFY_KEY_TYPE, 
-		// 	&public, 
-		// 	pok_bytes,
-		// 	message,
-		// 	threshold,
-		// ).map_err(|_| {
-		// 	error::Error::Signature(format!(
-		// 		"Failed to recover a key from the provided proof of knowledge"
-		// 	))
-		// })?;
-
 		let mut signature_byte_array: &[u8] = sig.as_ref();
 		let signature = <AuthorityId as RuntimeAppPublic>::Signature::decode(
 			&mut signature_byte_array,

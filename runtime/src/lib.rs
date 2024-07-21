@@ -267,8 +267,11 @@ construct_runtime!(
         Beefy: pallet_beefy_etf = 42,
         // MMR leaf construction must be after session in order to have a leaf's next_auth_set
         // refer to block<N>. See issue polkadot-fellows/runtimes#160 for details.
-        Mmr: pallet_mmr = 42,
-        MmrLeaf: pallet_beefy_mmr_etf = 43,
+        Mmr: pallet_mmr = 43,
+        MmrLeaf: pallet_beefy_mmr_etf = 44,
+
+        // AssetConversion: pallet_asset_conversion = 65,
+        // SkipFeelessPayment: pallet_skip_feeless_payment = 77,
     }
 );
 
