@@ -188,6 +188,7 @@ pub mod pallet {
 				&round_pk_bytes[..]
 			).unwrap();
 			let validator_set_id = <pallet_beefy::Pallet<T>>::validator_set_id();
+			// panic!("{:?}", validator_set_id);
 			let _ = Self::try_add_pulse(
 				signature, 
 				block_number, 
@@ -228,18 +229,22 @@ impl<T: Config> Pallet<T> {
 			);
 			let commitment = Commitment { 
 				payload, 
-				block_number: block_number, 
+				block_number, 
 				validator_set_id,
 			};
-			let v = sig.verify(&Message::new(b"", &commitment.encode()), &rk);
-			panic!("{:?}", v);
+			// let v = sig.verify(&Message::new(b"", &commitment.encode()), &rk);
+			// panic!("{:?}", v);
 			if sig.verify(&Message::new(b"", &commitment.encode()), &rk) {
 				let bounded_sig = 
 					BoundedVec::<u8, ConstU32<1024>>::try_from(raw_signature)
 						.map_err(|_| Error::<T>::InvalidSignature)?; // shouldn't ever happen?
 				let pulses = <Pulses<T>>::get();
 				// note: the pulses list cannot be empty (set on genesis)
-				let last_pulse = pulses[pulses.len() - 1].clone();
+				let mut last_pulse = Pulse::default();
+				if !pulses.is_empty() {
+					last_pulse = pulses[pulses.len() - 1].clone();
+				}
+				
 				let pulse = Pulse::build_next(
 					bounded_sig, 
 					block_number, 

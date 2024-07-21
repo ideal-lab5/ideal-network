@@ -19,6 +19,7 @@ use codec::Encode;
 use frame_support::{assert_ok, traits::OnInitialize};
 use crate::{
     self as beacon,
+    BlockNumberFor,
     mock::*, 
     Call, Config, 
     Error, Weight
@@ -53,13 +54,12 @@ fn test_genesis() {
 }
 
 #[test]
-fn test_can_write_pulse() {
+fn test_can_write_single_pulse() {
 	new_test_ext(vec![1]).execute_with(|| {
         let pulses = beacon::Pulses::<Test>::get();
         assert_eq!(pulses.len(), 0);
 
         let round_pk_bytes: Vec<u8> = <pallet_etf::Pallet<Test>>::round_pubkey().to_vec();
-        // panic!("{:?}", round_pk_bytes);
 		let rk = DoublePublicKey::<TinyBLS377>::deserialize_compressed(
 				&round_pk_bytes[..]
 		).unwrap();
@@ -71,9 +71,10 @@ fn test_can_write_pulse() {
             Vec::new()
         );
         let validator_set_id = <pallet_beefy::Pallet<Test>>::validator_set_id();
+        let block_number: BlockNumberFor<Test> = 1;
         let commitment = Commitment { 
             payload, 
-            block_number: 1, 
+            block_number, 
             validator_set_id,
         };
 
@@ -93,5 +94,73 @@ fn test_can_write_pulse() {
 
         let pulses = beacon::Pulses::<Test>::get();
         assert_eq!(pulses.len(), 1);
+	});
+}
+
+#[test]
+fn test_can_write_many_pulses() {
+	new_test_ext(vec![1]).execute_with(|| {
+        let pulses = beacon::Pulses::<Test>::get();
+        assert_eq!(pulses.len(), 0);
+
+        let round_pk_bytes: Vec<u8> = <pallet_etf::Pallet<Test>>::round_pubkey().to_vec();
+		let rk = DoublePublicKey::<TinyBLS377>::deserialize_compressed(
+				&round_pk_bytes[..]
+		).unwrap();
+        // now we write a new pulse...
+        let resharing_bytes = &pallet_etf::Shares::<Test>::get()[0];
+
+        let payload = Payload::from_single_entry(
+            known_payloads::ETF_SIGNATURE, 
+            Vec::new()
+        );
+        let validator_set_id = <pallet_beefy::Pallet<Test>>::validator_set_id();
+        let block_number: BlockNumberFor<Test> = 1;
+        let commitment = Commitment { 
+            payload: payload.clone(), 
+            block_number, 
+            validator_set_id,
+        };
+
+        let signature = calculate_signature(1, resharing_bytes, &commitment.encode());
+        let sig_bytes: &[u8] = signature.as_ref();
+        let sig = DoubleSignature::<TinyBLS377>::from_bytes(sig_bytes).unwrap();
+        // a little sanity check
+        assert!(sig.verify(&Message::new(b"", &commitment.encode()), &rk));
+        
+        assert_ok!(Beacon::write_pulse(
+            RuntimeOrigin::none(), 
+            sig_bytes.to_vec(),
+            1,
+        ));
+        // step to next block
+        init_block(1);
+
+        let pulses = beacon::Pulses::<Test>::get();
+        assert_eq!(pulses.len(), 1);
+
+        // write another valid pulse
+        let next_block_number: BlockNumberFor<Test> = 2;
+        let validator_set_id = <pallet_beefy::Pallet<Test>>::validator_set_id();
+        let next_commitment = Commitment { 
+            payload, 
+            block_number: next_block_number, 
+            validator_set_id,
+        };
+
+        let next_signature = calculate_signature(1, resharing_bytes, &next_commitment.encode());
+        let next_sig_bytes: &[u8] = next_signature.as_ref();
+
+        assert_ok!(Beacon::write_pulse(
+            RuntimeOrigin::none(), 
+            next_sig_bytes.to_vec(),
+            2,
+        ));
+        // step to next block
+        init_block(2);
+
+        let pulses = beacon::Pulses::<Test>::get();
+        assert_eq!(pulses.len(), 2);
+
 	});
 }
