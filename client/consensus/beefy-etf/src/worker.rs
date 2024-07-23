@@ -39,8 +39,12 @@ use sc_utils::notification::NotificationReceiver;
 use sp_api::ProvideRuntimeApi;
 use sp_arithmetic::traits::{AtLeast32Bit, Saturating};
 use sp_consensus::SyncOracle;
-
-use w3f_bls::{DoubleSignature, EngineBLS, SerializableToBytes, SchnorrProof, TinyBLS377};
+// TODO: cleanup
+use ark_serialize::CanonicalSerialize;
+use w3f_bls::{Signature as BLSSignature, DoublePublicKey, DoubleSignature, EngineBLS, Message, TinyBLS377, SerializableToBytes};
+use w3f_bls::{
+    single_pop_aggregator::SignatureAggregatorAssumingPoP, DoublePublicKeyScheme, Keypair, PublicKey, PublicKeyInSignatureGroup, Signed, TinyBLS,
+};
 use etf_crypto_primitives::utils::interpolate_threshold_bls;
 
 #[cfg(feature = "bls-experimental")]
@@ -624,21 +628,37 @@ where
 			VersionedFinalityProof::V1(ref sc) => sc.commitment.block_number,
 		};
 
-        // // let binding = Vec::new();
+		// let binding = Vec::new();
+		let commitment: Vec<u8> = match finality_proof {
+			VersionedFinalityProof::V1(ref sc) => sc.commitment.encode()
+		};
+		
+        // let binding = Vec::new();
         let signatures: Vec<Option<Signature>> = match finality_proof {
             VersionedFinalityProof::V1(ref sc) => sc.signatures.clone()
         };
 
 		// now we cast them to the signature group and interpolate
 		// get all not-None sigs
-		let sigs: Vec<DoubleSignature<TinyBLS377>> = signatures.into_iter()
-        	.map(|x| {
+
+
+		let message = Message::new(b"", &commitment);
+
+		let mut prover_aggregator =
+            SignatureAggregatorAssumingPoP::<TinyBLS377>::new(message.clone());
+		signatures.into_iter()
+			.for_each(|sig| {
 				// TODO: error handling
-				let sig_bytes: &[u8] = x.as_ref().unwrap();
+				let sig_bytes: &[u8] = sig.as_ref().unwrap();
 				// TODO: handle error
-				DoubleSignature::<TinyBLS377>::from_bytes(sig_bytes).unwrap()
-			})
-        	.collect();
+				let double_sig = DoubleSignature::<TinyBLS377>::from_bytes(sig_bytes).unwrap();
+				prover_aggregator.add_signature(&BLSSignature(double_sig.0));
+			});
+
+		let mut serialized_sig = Vec::new();
+		let sig = &(&prover_aggregator).signature();
+		sig.serialize_compressed(&mut serialized_sig).unwrap();
+
 
 		// // interpolate sigs
 		// let sigs_in_sig_group: Vec<(<TinyBLS377 as EngineBLS>::Scalar, <TinyBLS377 as EngineBLS>::SignatureGroup)> = sigs.iter()
@@ -674,12 +694,13 @@ where
             .best_grandpa_block_header
             .clone();
         let best_hash = best_header.hash();
-        
-        // self.runtime.runtime_api().submit_unsigned_pulse(
-        //     best_hash,
-        //     signature.clone(),
-        //     block_num,
-        // );
+
+		
+		self.runtime.runtime_api().submit_unsigned_pulse(
+            best_hash,
+            serialized_sig.to_vec(),
+            block_num,
+        );
 
         // Set new best BEEFY block number.
         self.persisted_state.set_best_beefy(block_num);
@@ -810,7 +831,7 @@ where
 			return Ok(())
 		};
 
-		if let Some((signature, _id, commitment)) = self.get_signed_payload(
+		if let Some((signature, id, commitment)) = self.get_signed_payload(
 			target_number,
 			target_header,
 			// target_hash,
@@ -818,11 +839,10 @@ where
 			authority_id.clone(),
 		).map_err(|err| {
 			error!(target: LOG_TARGET, "🥩 Error calculating the signature {:?}", err);
-			// return Ok(());
 			return err;
 		})? {
 			
-			let vote = VoteMessage { commitment, id: authority_id, signature };
+			let vote = VoteMessage { commitment, id, signature };
 			if let Some(finality_proof) = self.handle_vote(vote.clone()).map_err(|err| {
 				error!(target: LOG_TARGET, "🥩 Error handling self vote: {}", err);
 				err
@@ -987,24 +1007,6 @@ where
 			"🥩 run BEEFY worker, best grandpa: #{:?}.",
 			self.best_grandpa_block()
 		);
-
-		// // when beefy workers run, they first need to report the public key to the ETF pallet
-		// let (etf_authority_id, signature) =
-		// 	match self.etf_extract(target_hash, authority_id.clone(), &encoded_commitment) {
-		// 		Some(sig) => sig,
-		// 		None => {
-		// 			error!(target: LOG_TARGET, "🎲 Error calculating ETF signature");
-		// 			return Ok(None);
-		// 		}
-		// 	};
-
-		// info!(
-		// 	target: LOG_TARGET,
-		// 	"🎲 Produced signature using {:?}, is_valid: {:?}",
-		// 	authority_id,
-		// 	BeefyKeystore::verify(&etf_authority_id, &signature, &encoded_commitment)
-		// );
-
 
 		let mut votes = Box::pin(
 			self.comms

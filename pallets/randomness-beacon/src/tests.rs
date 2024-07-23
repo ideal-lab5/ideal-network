@@ -81,9 +81,6 @@ fn test_can_write_single_pulse() {
         let etf_pk_1 = &pallet_etf::Commitments::<Test>::get()[0];
         let etf_pk_2 = &pallet_etf::Commitments::<Test>::get()[1];
         let etf_pk_3 = &pallet_etf::Commitments::<Test>::get()[2];
-        // let pok_1 = BatchPoK::<<TinyBLS377 as EngineBLS>::PublicKeyGroup>::deserialize_compressed(&resharing_bytes_1[..]).unwrap().commitment;
-        // let pok_2 = BatchPoK::<<TinyBLS377 as EngineBLS>::PublicKeyGroup>::deserialize_compressed(&resharing_bytes_2[..]).unwrap().commitment;
-        // let pok_3 = BatchPoK::<<TinyBLS377 as EngineBLS>::PublicKeyGroup>::deserialize_compressed(&resharing_bytes_3[..]).unwrap().commitment;
 
         let payload = Payload::from_single_entry(
             known_payloads::ETF_SIGNATURE, 
@@ -97,7 +94,7 @@ fn test_can_write_single_pulse() {
             validator_set_id,
         };
 
-        let mut pub_keys_in_sig_grp: Vec<PublicKeyInSignatureGroup<TinyBLS377>> = Vec::new();
+        // let mut pub_keys_in_sig_grp: Vec<PublicKeyInSignatureGroup<TinyBLS377>> = Vec::new();
 
         let (_pk1, signature_1) = calculate_signature(1, resharing_bytes_1, &commitment.encode());
         
@@ -113,6 +110,7 @@ fn test_can_write_single_pulse() {
 
         let (_pk2, signature_2) = calculate_signature(2, resharing_bytes_2, &commitment.encode());
         let sig_bytes_2: &[u8] = signature_2.as_ref();
+
         let sig_2 = DoubleSignature::<TinyBLS377>::from_bytes(sig_bytes_2).unwrap();
 
         let mut pk2_bytes: &[u8] = etf_pk_2.as_ref();
@@ -131,32 +129,36 @@ fn test_can_write_single_pulse() {
         let pk3_pub = <TinyBLS377 as EngineBLS>::PublicKeyGroup::deserialize_compressed(pk3_bytes_pub).unwrap();
         let pk3_sig = <TinyBLS377 as EngineBLS>::SignatureGroup::deserialize_compressed(pk3_bytes_sig).unwrap();
 
-        pub_keys_in_sig_grp.push(PublicKeyInSignatureGroup::<TinyBLS377>(pk1_sig));
-        pub_keys_in_sig_grp.push(PublicKeyInSignatureGroup::<TinyBLS377>(pk2_sig));
-        pub_keys_in_sig_grp.push(PublicKeyInSignatureGroup::<TinyBLS377>(pk3_sig));
+        // pub_keys_in_sig_grp.push(PublicKeyInSignatureGroup::<TinyBLS377>(pk1_sig));
+        // pub_keys_in_sig_grp.push(PublicKeyInSignatureGroup::<TinyBLS377>(pk2_sig));
+        // pub_keys_in_sig_grp.push(PublicKeyInSignatureGroup::<TinyBLS377>(pk3_sig));
 
         let message = Message::new(b"", &commitment.encode());
         let mut prover_aggregator =
             SignatureAggregatorAssumingPoP::<TinyBLS377>::new(message.clone());
-        let mut aggregated_public_key =
-            PublicKey::<TinyBLS377>(<TinyBLS377 as EngineBLS>::PublicKeyGroup::zero());
+        // let mut aggregated_public_key =
+        //     PublicKey::<TinyBLS377>(<TinyBLS377 as EngineBLS>::PublicKeyGroup::zero());
 
         // sign and aggegate
-        prover_aggregator.add_signature(&Signature(sig_1.0));
-        prover_aggregator.add_signature(&Signature(sig_2.0));
-        prover_aggregator.add_signature(&Signature(sig_3.0));
+        // let t = sig_1.1;
+        // prover_aggregator.add_signature(&Signature(sig_1.0));
+        // prover_aggregator.add_signature(&Signature(sig_2.0));
+        // prover_aggregator.add_signature(&Signature(sig_3.0));
+        // let t = sig_1 + sig_2;
 
-        aggregated_public_key.0 += pk1_pub;
-        aggregated_public_key.0 += pk2_pub;
-        aggregated_public_key.0 += pk3_pub;
+        // aggregated_public_key.0 += pk1_pub;
+        // aggregated_public_key.0 += pk2_pub;
+        // aggregated_public_key.0 += pk3_pub;
 
         let mut serialized_sig = Vec::new();
         let sig = &(&prover_aggregator).signature();
         sig.serialize_compressed(&mut serialized_sig).unwrap();
+        // panic!("{:?}", serialized_sig.len());
 
         assert_ok!(Beacon::write_pulse(
             RuntimeOrigin::none(), 
-            serialized_sig.to_vec(),
+            // serialized_sig.to_vec(),
+            vec![sig_bytes_1.to_vec(), sig_bytes_2.to_vec(), sig_bytes_3.to_vec()],
             1,
         ));
         // step to next block
