@@ -78,6 +78,9 @@ fn test_can_write_single_pulse() {
         let resharing_bytes_3 = &pallet_etf::Shares::<Test>::get()[2];
         
         // // convert to batchpok
+        let etf_pk_1 = &pallet_etf::Commitments::<Test>::get()[0];
+        let etf_pk_2 = &pallet_etf::Commitments::<Test>::get()[0];
+        let etf_pk_3 = &pallet_etf::Commitments::<Test>::get()[0];
         // let pok_1 = BatchPoK::<<TinyBLS377 as EngineBLS>::PublicKeyGroup>::deserialize_compressed(&resharing_bytes_1[..]).unwrap().commitment;
         // let pok_2 = BatchPoK::<<TinyBLS377 as EngineBLS>::PublicKeyGroup>::deserialize_compressed(&resharing_bytes_2[..]).unwrap().commitment;
         // let pok_3 = BatchPoK::<<TinyBLS377 as EngineBLS>::PublicKeyGroup>::deserialize_compressed(&resharing_bytes_3[..]).unwrap().commitment;
@@ -98,12 +101,18 @@ fn test_can_write_single_pulse() {
 
         let (pk1, signature_1) = calculate_signature(1, resharing_bytes_1, &commitment.encode());
         // get type as PublicKeyGroup from pk (first 48 bytes)
-        let mut pk1_bytes: &[u8] = pk1.as_ref();
-        let pk1_bytes_pub = &pk1_bytes[48..144];
-        let pk1_bytes_sig = &pk1_bytes[0..48];
+        // let mut pk1_bytes: &[u8] = pk1.as_ref();
+
+        // let etf_pk_1_bytes: Vec<u8> = Vec::new();
+        let pk1_ref: &[u8] = etf_pk_1.as_ref();
+        let pk1_bytes_pub = &pk1_ref[48..144];
+        let pk1_bytes_sig = &pk1_ref[0..48];
+
+        // panic!("{:?}", etf_pk_1.to_vec().as_slice());
 
         let pk1_pub = <TinyBLS377 as EngineBLS>::PublicKeyGroup::deserialize_compressed(pk1_bytes_pub).unwrap();
-        // assert!(pk1_pub.eq(&pok_1.commitment));
+        // assert!(pk1_pub.eq(&etf_pk_1));
+        // panic!("{:?}", pok_1);
         let pk1_sig = <TinyBLS377 as EngineBLS>::SignatureGroup::deserialize_compressed(pk1_bytes_sig).unwrap();
 
         let sig_bytes_1: &[u8] = signature_1.as_ref();

@@ -40,6 +40,9 @@ use sp_api::ProvideRuntimeApi;
 use sp_arithmetic::traits::{AtLeast32Bit, Saturating};
 use sp_consensus::SyncOracle;
 
+use w3f_bls::{DoubleSignature, EngineBLS, SerializableToBytes, SchnorrProof, TinyBLS377};
+use etf_crypto_primitives::utils::interpolate_threshold_bls;
+
 #[cfg(feature = "bls-experimental")]
 use sp_consensus_beefy_etf::bls_crypto::{AuthorityId, Signature};
 
@@ -621,12 +624,42 @@ where
 			VersionedFinalityProof::V1(ref sc) => sc.commitment.block_number,
 		};
 
-        let binding = Vec::new();
-        let signature = match finality_proof {
-            VersionedFinalityProof::V1(ref sc) => sc.commitment.payload.get_raw(
-                &known_payloads::ETF_SIGNATURE
-            ).unwrap_or(&binding),
+        // // let binding = Vec::new();
+        let signatures: Vec<Option<Signature>> = match finality_proof {
+            VersionedFinalityProof::V1(ref sc) => sc.signatures.clone()
         };
+
+		// now we cast them to the signature group and interpolate
+		// get all not-None sigs
+		let sigs: Vec<DoubleSignature<TinyBLS377>> = signatures.into_iter()
+        	.map(|x| {
+				// TODO: error handling
+				let sig_bytes: &[u8] = x.as_ref().unwrap();
+				// TODO: handle error
+				DoubleSignature::<TinyBLS377>::from_bytes(sig_bytes).unwrap()
+			})
+        	.collect();
+
+		// // interpolate sigs
+		// let sigs_in_sig_group: Vec<(<TinyBLS377 as EngineBLS>::Scalar, <TinyBLS377 as EngineBLS>::SignatureGroup)> = sigs.iter()
+		// 	.enumerate()
+		// 	.map(|(idx, sig)| 
+		// 		(<TinyBLS377 as EngineBLS>::Scalar::from(idx as u8), sig.0)
+		// 	)
+		// 	.collect();
+		// let interpolated_sig = interpolate_threshold_bls::<TinyBLS377>(sigs_in_sig_group);
+		// // aggregate DLEQs
+		// let dleqs: Vec<SchnorrProof<TinyBLS377>> = sigs.iter()
+		// 	.map(|sig| sig.1)
+		// 	.collect();
+
+		// dleqs.iter().fold(
+		// 	(<TinyBLS377 as EngineBLS>::Scalar::zero(), <TinyBLS377 as EngineBLS>::Scalar::zero()),
+		// 	|acc, &(x, y)| (acc.0 + x, acc.1 + y)
+		// );
+		
+
+		// then finally interpolate them to get a final sig and proof
 
         if block_num <= self.persisted_state.voting_oracle.best_beefy_block {
             // we've already finalized this round before, short-circuit.
@@ -642,8 +675,6 @@ where
             .clone();
         let best_hash = best_header.hash();
         
-        // TODO: need to fetch and interpolate signatures
-		// write now the signature we fetched isn't correct anyway
         // self.runtime.runtime_api().submit_unsigned_pulse(
         //     best_hash,
         //     signature.clone(),
@@ -956,6 +987,24 @@ where
 			"🥩 run BEEFY worker, best grandpa: #{:?}.",
 			self.best_grandpa_block()
 		);
+
+		// // when beefy workers run, they first need to report the public key to the ETF pallet
+		// let (etf_authority_id, signature) =
+		// 	match self.etf_extract(target_hash, authority_id.clone(), &encoded_commitment) {
+		// 		Some(sig) => sig,
+		// 		None => {
+		// 			error!(target: LOG_TARGET, "🎲 Error calculating ETF signature");
+		// 			return Ok(None);
+		// 		}
+		// 	};
+
+		// info!(
+		// 	target: LOG_TARGET,
+		// 	"🎲 Produced signature using {:?}, is_valid: {:?}",
+		// 	authority_id,
+		// 	BeefyKeystore::verify(&etf_authority_id, &signature, &encoded_commitment)
+		// );
+
 
 		let mut votes = Box::pin(
 			self.comms

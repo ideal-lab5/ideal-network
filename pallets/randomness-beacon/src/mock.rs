@@ -200,7 +200,8 @@ pub fn new_test_ext_raw_authorities(authorities: Vec<(u64, BeefyId)>) -> TestExt
 
 	pallet_etf::GenesisConfig::<Test> { 
 		genesis_resharing: genesis_resharing,
-		round_pubkey: round_pubkey
+		round_pubkey: round_pubkey,
+		_phantom: Default::default(),
 	}
 		.assimilate_storage(&mut t)
 		.unwrap();

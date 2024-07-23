@@ -19,7 +19,7 @@ use crate::{
 	bls_crypto, AuthorityIdBound, BeefySignatureHasher, Commitment, EquivocationProof, Payload,
 	ValidatorSetId, VoteMessage, bls_crypto::{AuthorityId as BeefyId},
 };
-use sp_application_crypto::{AppCrypto, AppPair, RuntimeAppPublic, Wraps};
+use sp_application_crypto::{AppCrypto, AppPair, RuntimeAppPublic, Wraps, UncheckedFrom};
 use sp_core::{bls377, Pair};
 use sp_runtime::traits::Hash;
 
@@ -30,7 +30,10 @@ use strum::IntoEnumIterator;
 
 use ark_serialize::CanonicalSerialize;
 use ark_std::UniformRand;
-use etf_crypto_primitives::dpss::acss::DoubleSecret;
+use etf_crypto_primitives::{
+	proofs::hashed_el_gamal_sigma::BatchPoK,
+	dpss::acss::DoubleSecret
+};
 use rand::rngs::OsRng;
 use w3f_bls::{DoublePublicKey, DoublePublicKeyScheme, EngineBLS, SerializableToBytes, TinyBLS377};
 
@@ -151,7 +154,7 @@ pub fn generate_equivocation_proof(
 /// return a vec of (authority id, resharing, pubkey commitment) along with ibe public key against the master secret
 pub fn etf_genesis<E: EngineBLS>(
     initial_authorities: Vec<BeefyId>,
-) -> (Vec<u8>, Vec<(BeefyId, Vec<u8>)>) {
+) -> (Vec<u8>, Vec<(Vec<u8>, Vec<u8>)>) {
     let msk_prime = E::Scalar::rand(&mut OsRng);
     let keypair = w3f_bls::KeypairVT::<E>::generate(&mut OsRng);
     let msk: E::Scalar = keypair.secret.0;
@@ -167,7 +170,10 @@ pub fn etf_genesis<E: EngineBLS>(
         .serialize_compressed(&mut double_public_bytes)
         .unwrap();
 
-    let genesis_resharing = double_secret
+    let genesis_resharing: Vec<(
+		DoublePublicKey<E>,
+		BatchPoK<E::PublicKeyGroup>
+	)> = double_secret
         .reshare(
             &initial_authorities
                 .iter()
@@ -187,10 +193,24 @@ pub fn etf_genesis<E: EngineBLS>(
         .iter()
         .enumerate()
         .map(|(idx, _)| {
+			let pk = &genesis_resharing[idx].0;
+			let mut pk_bytes = [0u8;144];
+			pk.serialize_compressed(&mut pk_bytes[..]).unwrap();
+			// panic!("???? {:?}", pk_bytes);
+			// let mut raw = [0u8; PUBLIC_KEY_SERIALIZED_SIZE];
+		// let pk = DoublePublicKeyScheme::into_double_public_key(&self.0).to_bytes();
+		// raw.copy_from_slice(pk.as_slice());
+			// let blspk = bls377::Public::unchecked_from(pk_bytes);
+			// pk.public
+
+			// panic!("{:?}", pk_bytes.len());
+
             let pok = &genesis_resharing[idx].1;
             let mut bytes = Vec::new();
-            pok.serialize_compressed(&mut bytes).unwrap();
-            (initial_authorities[idx].clone(), bytes)
+			pok.serialize_compressed(&mut bytes).unwrap();
+			// let beefy_id = BeefyId::from(pk_bytes);
+            // (initial_authorities[idx].clone(), bytes)
+			(pk_bytes.to_vec(), bytes)
         })
         .collect::<Vec<_>>();
     (double_public_bytes, serialized_resharings)

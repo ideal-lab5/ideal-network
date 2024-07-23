@@ -69,11 +69,12 @@ pub mod pallet {
 	pub type Shares<T: Config> = 
 		StorageValue<_, BoundedVec<BoundedVec<u8, ConstU32<1024>>, T::MaxAuthorities>, ValueQuery>;
 
-	// /// public commitments of the the expected validator to etf pubkey
-	// /// assumes order follows the same as the Authorities StorageValue 
-	// #[pallet::storage]
-	// pub type Commitments<T: Config> = 
-	// 	StorageValue<_, BoundedVec<T::BeefyId, T::MaxAuthorities>, ValueQuery>;
+	/// public commitments of the the expected validator to etf pubkey
+	/// assumes order follows the same as the Authorities StorageValue 
+	/// TODO: this should  be BeefyId<T> inbstead of Vec
+	#[pallet::storage]
+	pub type Commitments<T: Config> = 
+		StorageValue<_, BoundedVec<BoundedVec<u8, ConstU32<144>>, T::MaxAuthorities>, ValueQuery>;
 
 	/// the public key for the round (or rounds)
 	#[pallet::storage]
@@ -83,9 +84,10 @@ pub mod pallet {
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
 		/// (beefy id, commitment, BatchPoK (which technically contains the commitment...))
-		pub genesis_resharing: Vec<(T::BeefyId, Vec<u8>)>,
+		pub genesis_resharing: Vec<(Vec<u8>, Vec<u8>)>,
 		/// the round pubkey is the IBE master secret multiplied by a given group generator (e.g r = sP)
 		pub round_pubkey: Vec<u8>,
+		pub _phantom: PhantomData<T>,
 	}
 
 	impl<T: Config> Default for GenesisConfig<T> {
@@ -93,6 +95,7 @@ pub mod pallet {
 			Self { 
 				genesis_resharing: Vec::new(),
 				round_pubkey: Vec::new(),
+				_phantom: Default::default(),
 			}
 		}
 	}
@@ -122,7 +125,7 @@ pub mod pallet {
 impl<T: Config> Pallet<T> {
 
 	fn initialize(
-		genesis_resharing: &Vec<(T::BeefyId, Vec<u8>)>,
+		genesis_resharing: &Vec<(Vec<u8>, Vec<u8>)>,
 		round_key: Vec<u8>,
 	) -> Result<(), ()>  {
 		let bounded_rk =
@@ -132,10 +135,16 @@ impl<T: Config> Pallet<T> {
 
 		let mut unbounded_shares: Vec<BoundedVec<u8, ConstU32<1024>>> = Vec::new();
 		
-		genesis_resharing.iter().for_each(|(_commitment, pok_bytes)| {
+		genesis_resharing.iter().for_each(|(pubkey, pok_bytes)| {
+
+			// let bounded_pk =
+			// 	BoundedVec::<u8, ConstU32<1024>>::try_from(pubkey.clone())
+			// 		.expect("genesis poks should be well formatted");
+
 			let bounded_pok =
 				BoundedVec::<u8, ConstU32<1024>>::try_from(pok_bytes.clone())
 					.expect("genesis poks should be well formatted");
+			
 			unbounded_shares.push(bounded_pok);
 		});
 		
@@ -145,14 +154,16 @@ impl<T: Config> Pallet<T> {
 			).expect("There should be the correct number of genesis resharings");
 		<Shares<T>>::put(bounded_shares);
 
-		// let bounded_commitments =
-		// 	BoundedVec::<T::BeefyId, T::MaxAuthorities>::try_from(
-		// 		genesis_resharing.iter()
-		// 			.map(|g| g.0.clone())
-		// 			.collect::<Vec<_>>()
-		// 	).map_err(|_| ())?;
+		let bounded_commitments =
+			BoundedVec::<BoundedVec<u8, ConstU32<144>>, T::MaxAuthorities>::try_from(
+				genesis_resharing.iter()
+					.map(|g| BoundedVec::<u8, ConstU32<144>>::try_from(g.0.clone())
+						.expect("The serialized round key should be 144 bytes.")
+					)
+					.collect::<Vec<_>>()
+			).map_err(|_| ())?;
 
-		// Commitments::<T>::put(bounded_commitments);
+		Commitments::<T>::put(bounded_commitments);
 		Ok(())
 	}
 

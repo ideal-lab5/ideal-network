@@ -28,7 +28,7 @@ ark-std = "0.4.0"
 ark-serialize = "0.4.0"
 rand = "0.8"
 w3f-bls = "0.1.3"
-etf-crypto-primitives = { git = "https://github.com/ideal-lab5/etf-sdk.git", branch = "w3fbls-migration" }
+etf-crypto-primitives = { git = "https://github.com/ideal-lab5/etf-sdk.git", branch = "tony/dev" }
 
 # Local
 beefy = { package = "sc-consensus-beefy-etf", path = "../client/consensus/beefy-etf", features = ["bls-experimental"] }
