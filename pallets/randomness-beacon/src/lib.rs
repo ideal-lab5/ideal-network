@@ -180,6 +180,7 @@ pub mod pallet {
 		pub fn write_pulse(
 			_origin: OriginFor<T>,
 			signature: Vec<u8>,
+			raw_signatures: Vec<Vec<u8>>,
 			block_number: BlockNumberFor<T>,
 		) -> DispatchResult {
 			// do we want a signed origin? maybe...
@@ -232,13 +233,23 @@ impl<T: Config> Pallet<T> {
 				block_number, 
 				validator_set_id,
 			};
-			// let v = sig.verify(&Message::new(b"", &commitment.encode()), &rk);
-			// panic!("{:?}", v);
 			if sig.verify(&Message::new(b"", &commitment.encode()), &rk) {
 				let bounded_sig = 
 					BoundedVec::<u8, ConstU32<1024>>::try_from(raw_signature)
 						.map_err(|_| Error::<T>::InvalidSignature)?; // shouldn't ever happen?
 				let pulses = <Pulses<T>>::get();
+
+
+				// if valid, then interpolate the sig
+				
+				// within the 'signature group', but not a double signature...
+				// let sig = interpolate_threshold_bls::<TinyBLS377>(vec![
+				//     (<TinyBLS377 as EngineBLS>::Scalar::from(1u8), sig_1.0),
+				//     (<TinyBLS377 as EngineBLS>::Scalar::from(2u8), sig_2.0),
+				//     (<TinyBLS377 as EngineBLS>::Scalar::from(3u8), sig_3.0),
+				// ]);
+
+
 				// note: the pulses list cannot be empty (set on genesis)
 				let mut last_pulse = Pulse::default();
 				if !pulses.is_empty() {
