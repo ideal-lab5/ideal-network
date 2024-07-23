@@ -7,7 +7,8 @@ use runtime::{AccountId, AuraId, Signature, EXISTENTIAL_DEPOSIT};
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
-use sp_core::{sr25519, Pair, Public};
+use sp_core::{sr25519, bls377, Pair, Public};
+use sp_application_crypto::UncheckedFrom;
 use sp_runtime::{
     traits::{IdentifyAccount, Verify},
     RuntimeAppPublic,
@@ -15,8 +16,11 @@ use sp_runtime::{
 
 use ark_serialize::CanonicalSerialize;
 use ark_std::UniformRand;
-use etf_crypto_primitives::dpss::acss::DoubleSecret;
 use rand::rngs::OsRng;
+use etf_crypto_primitives::{
+	proofs::hashed_el_gamal_sigma::BatchPoK,
+	dpss::acss::DoubleSecret
+};
 use w3f_bls::{DoublePublicKey, DoublePublicKeyScheme, EngineBLS, SerializableToBytes, TinyBLS377};
 /// Specialized `ChainSpec` for the normal parachain runtime.
 pub type ChainSpec = sc_service::GenericChainSpec<Extensions>;
@@ -196,6 +200,7 @@ pub fn local_testnet_config() -> ChainSpec {
 }
 
 
+
 /// Helper function to prepare initial secrets and resharing for ETF conensus
 /// return a vec of (authority id, resharing, pubkey commitment) along with ibe public key against the master secret
 pub fn etf_genesis<E: EngineBLS>(
@@ -216,7 +221,10 @@ pub fn etf_genesis<E: EngineBLS>(
         .serialize_compressed(&mut double_public_bytes)
         .unwrap();
 
-    let genesis_resharing = double_secret
+    let genesis_resharing: Vec<(
+		DoublePublicKey<E>,
+		BatchPoK<E::PublicKeyGroup>
+	)> = double_secret
         .reshare(
             &initial_authorities
                 .iter()
@@ -236,15 +244,21 @@ pub fn etf_genesis<E: EngineBLS>(
         .iter()
         .enumerate()
         .map(|(idx, _)| {
+			let pk = &genesis_resharing[idx].0;
+			let mut pk_bytes = [0u8;144];
+			pk.serialize_compressed(&mut pk_bytes[..]).unwrap();
+			let blspk = bls377::Public::unchecked_from(pk_bytes);
+
             let pok = &genesis_resharing[idx].1;
             let mut bytes = Vec::new();
-            pok.serialize_compressed(&mut bytes).unwrap();
-            (initial_authorities[idx].clone(), bytes)
+			pok.serialize_compressed(&mut bytes).unwrap();
+			
+			let beefy_id = BeefyId::from(blspk);
+			(beefy_id, bytes)
         })
         .collect::<Vec<_>>();
     (double_public_bytes, serialized_resharings)
 }
-
 fn testnet_genesis(
     initial_authorities: Vec<(AccountId, AccountId, AuraId, BeefyId)>,
     endowed_accounts: Vec<AccountId>,

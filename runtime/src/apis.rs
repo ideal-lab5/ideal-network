@@ -356,11 +356,12 @@ impl_runtime_apis! {
             signature_bytes: Vec<u8>,
             block_number: BlockNumber
         ) -> Option<()> {
-            Beacon::write_pulse(
-                RuntimeOrigin::none(),
-                signature_bytes,
-                block_number,
-            ).ok()
+            // Beacon::write_pulse(
+            //     RuntimeOrigin::none(),
+            //     signature_bytes,
+            //     block_number,
+            // ).ok()
+            None
         }
 
     }

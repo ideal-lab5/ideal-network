@@ -100,19 +100,12 @@ fn test_can_write_single_pulse() {
         let mut pub_keys_in_sig_grp: Vec<PublicKeyInSignatureGroup<TinyBLS377>> = Vec::new();
 
         let (_pk1, signature_1) = calculate_signature(1, resharing_bytes_1, &commitment.encode());
-        // get type as PublicKeyGroup from pk (first 48 bytes)
-        // let mut pk1_bytes: &[u8] = pk1.as_ref();
-
-        // let etf_pk_1_bytes: Vec<u8> = Vec::new();
+        
         let pk1_ref: &[u8] = etf_pk_1.as_ref();
         let pk1_bytes_pub = &pk1_ref[48..144];
         let pk1_bytes_sig = &pk1_ref[0..48];
 
-        // panic!("{:?}", etf_pk_1.to_vec().as_slice());
-
         let pk1_pub = <TinyBLS377 as EngineBLS>::PublicKeyGroup::deserialize_compressed(pk1_bytes_pub).unwrap();
-        // assert!(pk1_pub.eq(&etf_pk_1));
-        // panic!("{:?}", pok_1);
         let pk1_sig = <TinyBLS377 as EngineBLS>::SignatureGroup::deserialize_compressed(pk1_bytes_sig).unwrap();
 
         let sig_bytes_1: &[u8] = signature_1.as_ref();
@@ -157,35 +150,20 @@ fn test_can_write_single_pulse() {
         aggregated_public_key.0 += pk2_pub;
         aggregated_public_key.0 += pk3_pub;
 
-        // this is what the verifier side should do...
-        let mut verifier_aggregator = SignatureAggregatorAssumingPoP::<TinyBLS377>::new(message);
+        let mut serialized_sig = Vec::new();
+        let sig = &(&prover_aggregator).signature();
+        sig.serialize_compressed(&mut serialized_sig).unwrap();
 
-        verifier_aggregator.add_signature(&(&prover_aggregator).signature());
+        assert_ok!(Beacon::write_pulse(
+            RuntimeOrigin::none(), 
+            serialized_sig.to_vec(),
+            1,
+        ));
+        // step to next block
+        init_block(1);
 
-        //aggregate public keys in signature group
-        verifier_aggregator.add_publickey(&aggregated_public_key);
-
-        pub_keys_in_sig_grp.iter().for_each(|pk| {verifier_aggregator.add_auxiliary_public_key(pk);});
-
-        assert!(
-            verifier_aggregator.verify_using_aggregated_auxiliary_public_keys::<Sha256>(),
-            "verifying with honest auxilary public key should pass"
-        );
-
-        // a little sanity check
-        // assert!(sig.verify(&Message::new(b"", &commitment.encode()), &rk));
-        
-        // assert_ok!(Beacon::write_pulse(
-        //     RuntimeOrigin::none(), 
-        //     sig_bytes.to_vec(),
-        //     1,
-        // ));
-        // // step to next block
-        // init_block(1);
-
-
-        // let pulses = beacon::Pulses::<Test>::get();
-        // assert_eq!(pulses.len(), 1);
+        let pulses = beacon::Pulses::<Test>::get();
+        assert_eq!(pulses.len(), 1);
 	});
 }
 

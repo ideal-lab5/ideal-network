@@ -31,12 +31,18 @@ use frame_system::pallet_prelude::*;
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
 
+use ark_ff::Zero;
 use ark_serialize::CanonicalDeserialize;
-use w3f_bls::{DoublePublicKey, DoubleSignature, Message, SerializableToBytes, TinyBLS377};
+use w3f_bls::{Signature, DoublePublicKey, DoubleSignature, EngineBLS, Message, TinyBLS377, SerializableToBytes};
+use w3f_bls::{
+    single_pop_aggregator::SignatureAggregatorAssumingPoP, DoublePublicKeyScheme, Keypair, PublicKey, PublicKeyInSignatureGroup, Signed, TinyBLS,
+};
+
 use sp_consensus_beefy_etf::{
 	Commitment, ValidatorSetId, Payload, known_payloads,
 };
 use sha3::{Digest, Sha3_512};
+use sha2::Sha256;
 
 #[cfg(test)]
 mod mock;
@@ -45,21 +51,22 @@ mod tests;
 
 pub use pallet::*;
 
-pub type OpaqueSignature = BoundedVec<u8, ConstU32<1024>>;
+pub type OpaqueSignature = BoundedVec<u8, ConstU32<144>>;
 
 #[derive(
 	Default, Clone, Eq, PartialEq, RuntimeDebugNoBound, 
 	Encode, Decode, TypeInfo, MaxEncodedLen, Serialize, Deserialize)]
 pub struct PulseHeader<BN: core::fmt::Debug> {
 	pub block_number: BN,
-	pub hash_prev: BoundedVec<u8, ConstU32<1024>>
+	// todo
+	pub hash_prev: BoundedVec<u8, ConstU32<144>>
 }
 
 #[derive(
 	Default, Clone, Eq, PartialEq, RuntimeDebugNoBound, 
 	Encode, Decode, TypeInfo, MaxEncodedLen, Serialize, Deserialize)]
 pub struct PulseBody {
-	pub double_sig: BoundedVec<u8, ConstU32<1024>>,
+	pub double_sig: BoundedVec<u8, ConstU32<144>>,
 }
 
 #[derive(
@@ -82,7 +89,7 @@ impl<BN: core::fmt::Debug> Pulse<BN> {
 		hasher.update(prev.body.double_sig.to_vec());
 		let hash_prev = hasher.finalize();
 
-		let bounded_hash = BoundedVec::<u8, ConstU32<1024>>::try_from(hash_prev.to_vec())
+		let bounded_hash = BoundedVec::<u8, ConstU32<144>>::try_from(hash_prev.to_vec())
 			.expect("the hasher hsould work fix this later though");
 
 		let header: PulseHeader<BN> = PulseHeader {
@@ -180,7 +187,6 @@ pub mod pallet {
 		pub fn write_pulse(
 			_origin: OriginFor<T>,
 			signature: Vec<u8>,
-			raw_signatures: Vec<Vec<u8>>,
 			block_number: BlockNumberFor<T>,
 		) -> DispatchResult {
 			// do we want a signed origin? maybe...
@@ -218,36 +224,57 @@ impl<T: Config> Pallet<T> {
 
 	/// add a new pulse to the hash chain
 	fn try_add_pulse(
-		raw_signature: Vec<u8>,
+		signature_bytes: Vec<u8>,
 		block_number: BlockNumberFor<T>,
 		rk: DoublePublicKey<TinyBLS377>,
 		validator_set_id: ValidatorSetId,
 	) -> Result<(), Error<T>> {
-		if let Ok(sig) = DoubleSignature::<TinyBLS377>::from_bytes(&raw_signature) {
-			let payload = Payload::from_single_entry(
-				known_payloads::ETF_SIGNATURE, 
-				Vec::new()
-			);
-			let commitment = Commitment { 
-				payload, 
-				block_number, 
-				validator_set_id,
-			};
-			if sig.verify(&Message::new(b"", &commitment.encode()), &rk) {
-				let bounded_sig = 
-					BoundedVec::<u8, ConstU32<1024>>::try_from(raw_signature)
-						.map_err(|_| Error::<T>::InvalidSignature)?; // shouldn't ever happen?
-				let pulses = <Pulses<T>>::get();
+		let payload = Payload::from_single_entry(
+			known_payloads::ETF_SIGNATURE, 
+			Vec::new()
+		);
+		let commitment = Commitment { 
+			payload, 
+			block_number, 
+			validator_set_id,
+		};
+
+		let message = Message::new(b"", &commitment.encode());
+		let mut pub_keys_in_sig_grp: Vec<PublicKeyInSignatureGroup<TinyBLS377>> = Vec::new();
+
+		let pubkeys = <pallet_etf::Pallet<T>>::commitments();
+		let mut aggregated_public_key = PublicKey::<TinyBLS377>(<TinyBLS377 as EngineBLS>::PublicKeyGroup::zero());
+		pubkeys.iter().for_each(|pk| {
+			let sig_bytes: &[u8] = &pk.encode()[0..48];
+			let pub_bytes: &[u8] = &pk.encode()[48..144];
+			let pk_pub = <TinyBLS377 as EngineBLS>::PublicKeyGroup::deserialize_compressed(pub_bytes).unwrap();
+			let pk_sig = <TinyBLS377 as EngineBLS>::SignatureGroup::deserialize_compressed(sig_bytes).unwrap();
+			pub_keys_in_sig_grp.push(PublicKeyInSignatureGroup::<TinyBLS377>(pk_sig));
+			aggregated_public_key.0 += pk_pub;
+		});
+
+		let mut verifier_aggregator = SignatureAggregatorAssumingPoP::<TinyBLS377>::new(message);
+		let signature = Signature::<TinyBLS377>::from_bytes(&signature_bytes).unwrap();
+		verifier_aggregator.add_signature(&signature);
+		//aggregate public keys in signature group
+		verifier_aggregator.add_publickey(&aggregated_public_key);
+		pub_keys_in_sig_grp.iter().for_each(|pk| {verifier_aggregator.add_auxiliary_public_key(pk);});
+		
+		if verifier_aggregator.verify_using_aggregated_auxiliary_public_keys::<Sha256>() {
+			let bounded_sig = 
+				BoundedVec::<u8, ConstU32<144>>::try_from(signature_bytes)
+					.map_err(|_| Error::<T>::InvalidSignature)?; // shouldn't ever happen?
+			let pulses = <Pulses<T>>::get();
 
 
-				// if valid, then interpolate the sig
+			// 	// if valid, then interpolate the sig?
 				
-				// within the 'signature group', but not a double signature...
-				// let sig = interpolate_threshold_bls::<TinyBLS377>(vec![
-				//     (<TinyBLS377 as EngineBLS>::Scalar::from(1u8), sig_1.0),
-				//     (<TinyBLS377 as EngineBLS>::Scalar::from(2u8), sig_2.0),
-				//     (<TinyBLS377 as EngineBLS>::Scalar::from(3u8), sig_3.0),
-				// ]);
+			// 	// within the 'signature group', but not a double signature...
+			// 	// let sig = interpolate_threshold_bls::<TinyBLS377>(vec![
+			// 	//     (<TinyBLS377 as EngineBLS>::Scalar::from(1u8), sig_1.0),
+			// 	//     (<TinyBLS377 as EngineBLS>::Scalar::from(2u8), sig_2.0),
+			// 	//     (<TinyBLS377 as EngineBLS>::Scalar::from(3u8), sig_3.0),
+			// 	// ]);
 
 
 				// note: the pulses list cannot be empty (set on genesis)
@@ -266,11 +293,7 @@ impl<T: Config> Pallet<T> {
 					.map_err(|_| Error::<T>::PulseOverflow)?;
 				<Pulses<T>>::put(pulses);
 				return Ok(());
-			} else {
-				return Err(Error::<T>::InvalidSignature);
-			}
 		}
-
-		Err(Error::<T>::SignatureNotDeserializable)
+		Err(Error::<T>::InvalidSignature)
 	}
 }
