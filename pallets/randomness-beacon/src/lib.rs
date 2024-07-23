@@ -222,11 +222,6 @@ impl<T: Config> Pallet<T> {
 		rk: DoublePublicKey<TinyBLS377>,
 		validator_set_id: ValidatorSetId,
 	) -> Result<(), Error<T>> {
-
-		// convert all sigs to DoubleSigs + verify each one manually?
-		// then we can interpolate and store onchain
-		// bit that seems somewhat horrible...
-
 		let payload = Payload::from_single_entry(
 			known_payloads::ETF_SIGNATURE, 
 			Vec::new()
@@ -237,7 +232,6 @@ impl<T: Config> Pallet<T> {
 			validator_set_id,
 		};
 
-		// panic!("{:?}", raw_signatures.len());
 		let mut good_sigs = Vec::new();
 		raw_signatures.iter().enumerate().for_each(|(idx, rs)| {
 			// expected pubkey
@@ -269,16 +263,6 @@ impl<T: Config> Pallet<T> {
 		let pulses = <Pulses<T>>::get();
 
 
-		// if valid, then interpolate the sig
-		
-		// within the 'signature group', but not a double signature...
-		// let sig = interpolate_threshold_bls::<TinyBLS377>(vec![
-		//     (<TinyBLS377 as EngineBLS>::Scalar::from(1u8), sig_1.0),
-		//     (<TinyBLS377 as EngineBLS>::Scalar::from(2u8), sig_2.0),
-		//     (<TinyBLS377 as EngineBLS>::Scalar::from(3u8), sig_3.0),
-		// ]);
-
-
 		// note: the pulses list cannot be empty (set on genesis)
 		let mut last_pulse = Pulse::default();
 		if !pulses.is_empty() {
@@ -295,7 +279,6 @@ impl<T: Config> Pallet<T> {
 			.map_err(|_| Error::<T>::PulseOverflow)?;
 		<Pulses<T>>::put(pulses);
 		Ok(())
-		// return Ok(());
 
 
 		// if let Ok(sig) = DoubleSignature::<TinyBLS377>::from_bytes(&raw_signature) {
