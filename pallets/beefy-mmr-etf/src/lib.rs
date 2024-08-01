@@ -102,7 +102,7 @@ impl Convert<sp_consensus_beefy_etf::bls_crypto::AuthorityId, Vec<u8>> for Beefy
 	}
 }
 
-
+/// The merkle root type
 pub type MerkleRootOf<T> = <<T as pallet_mmr::Config>::Hashing as sp_runtime::traits::Hash>::Output;
 
 #[frame_support::pallet]

@@ -169,7 +169,7 @@ pub(crate) mod tests {
 	#[test]
 	fn should_verify_with_validator_set() {
 		let keys = &[Keyring::Alice, Keyring::Bob, Keyring::Charlie];
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(keys), make_beefy_ids(keys), 0).unwrap();
 
 		// build valid justification
 		let block_num = 42;
@@ -188,7 +188,7 @@ pub(crate) mod tests {
 
 		// wrong validator set id -> should fail verification
 		let good_proof = proof.clone().into();
-		let other = ValidatorSet::new(make_beefy_ids(keys), 1).unwrap();
+		let other = ValidatorSet::new(make_beefy_ids(keys), make_beefy_ids(keys), 1).unwrap();
 		match verify_with_validator_set::<Block>(block_num, &other, &good_proof) {
 			Err((ConsensusError::InvalidJustification, 0)) => (),
 			e => assert!(false, "Got unexpected {:?}", e),
@@ -235,7 +235,7 @@ pub(crate) mod tests {
 	#[test]
 	fn should_decode_and_verify_finality_proof() {
 		let keys = &[Keyring::Alice, Keyring::Bob];
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(keys), make_beefy_ids(keys), 0).unwrap();
 		let block_num = 1;
 
 		// build valid justification

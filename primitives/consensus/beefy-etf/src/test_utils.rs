@@ -15,21 +15,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(feature = "bls-experimental")]
-use crate::ecdsa_bls_crypto;
 use crate::{
-	ecdsa_crypto, AuthorityIdBound, BeefySignatureHasher, Commitment, EquivocationProof, Payload,
+	bls_crypto, AuthorityIdBound, BeefySignatureHasher, Commitment, EquivocationProof, Payload,
 	ValidatorSetId, VoteMessage,
 };
 use sp_application_crypto::{AppCrypto, AppPair, RuntimeAppPublic, Wraps};
-use sp_core::{ecdsa, Pair};
+use sp_core::{bls377, Pair};
 use sp_runtime::traits::Hash;
 
 use codec::Encode;
 use std::{collections::HashMap, marker::PhantomData};
 use strum::IntoEnumIterator;
 
-/// Set of test accounts using [`crate::ecdsa_crypto`] types.
+/// Set of test accounts using [`crate::bls_crypto`] types.
 #[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, strum::Display, strum::EnumIter)]
 pub enum Keyring<AuthorityId> {
@@ -52,25 +50,13 @@ pub trait BeefySignerAuthority<MsgHash: Hash>: AppPair {
 	fn sign_with_hasher(&self, message: &[u8]) -> <Self as AppCrypto>::Signature;
 }
 
-impl<MsgHash> BeefySignerAuthority<MsgHash> for <ecdsa_crypto::AuthorityId as AppCrypto>::Pair
+impl<MsgHash> BeefySignerAuthority<MsgHash> for <bls_crypto::AuthorityId as AppCrypto>::Pair
 where
 	MsgHash: Hash,
 	<MsgHash as Hash>::Output: Into<[u8; 32]>,
 {
 	fn sign_with_hasher(&self, message: &[u8]) -> <Self as AppCrypto>::Signature {
-		let hashed_message = <MsgHash as Hash>::hash(message).into();
-		self.as_inner_ref().sign_prehashed(&hashed_message).into()
-	}
-}
-
-#[cfg(feature = "bls-experimental")]
-impl<MsgHash> BeefySignerAuthority<MsgHash> for <ecdsa_bls_crypto::AuthorityId as AppCrypto>::Pair
-where
-	MsgHash: Hash,
-	<MsgHash as Hash>::Output: Into<[u8; 32]>,
-{
-	fn sign_with_hasher(&self, message: &[u8]) -> <Self as AppCrypto>::Signature {
-		self.as_inner_ref().sign_with_hasher::<MsgHash>(&message).into()
+		self.as_inner_ref().sign(&message).into()
 	}
 }
 
@@ -112,39 +98,39 @@ where
 }
 
 lazy_static::lazy_static! {
-	static ref PRIVATE_KEYS: HashMap<Keyring<ecdsa_crypto::AuthorityId>, ecdsa_crypto::Pair> =
+	static ref PRIVATE_KEYS: HashMap<Keyring<bls_crypto::AuthorityId>, bls_crypto::Pair> =
 		Keyring::iter().map(|i| (i.clone(), i.pair())).collect();
-	static ref PUBLIC_KEYS: HashMap<Keyring<ecdsa_crypto::AuthorityId>, ecdsa_crypto::Public> =
+	static ref PUBLIC_KEYS: HashMap<Keyring<bls_crypto::AuthorityId>, bls_crypto::Public> =
 		PRIVATE_KEYS.iter().map(|(name, pair)| (name.clone(), sp_application_crypto::Pair::public(pair))).collect();
 }
 
-impl From<Keyring<ecdsa_crypto::AuthorityId>> for ecdsa_crypto::Pair {
-	fn from(k: Keyring<ecdsa_crypto::AuthorityId>) -> Self {
+impl From<Keyring<bls_crypto::AuthorityId>> for bls_crypto::Pair {
+	fn from(k: Keyring<bls_crypto::AuthorityId>) -> Self {
 		k.pair()
 	}
 }
 
-impl From<Keyring<ecdsa_crypto::AuthorityId>> for ecdsa::Pair {
-	fn from(k: Keyring<ecdsa_crypto::AuthorityId>) -> Self {
+impl From<Keyring<bls_crypto::AuthorityId>> for bls377::Pair {
+	fn from(k: Keyring<bls_crypto::AuthorityId>) -> Self {
 		k.pair().into()
 	}
 }
 
-impl From<Keyring<ecdsa_crypto::AuthorityId>> for ecdsa_crypto::Public {
-	fn from(k: Keyring<ecdsa_crypto::AuthorityId>) -> Self {
+impl From<Keyring<bls_crypto::AuthorityId>> for bls_crypto::Public {
+	fn from(k: Keyring<bls_crypto::AuthorityId>) -> Self {
 		(*PUBLIC_KEYS).get(&k).cloned().unwrap()
 	}
 }
 
 /// Create a new `EquivocationProof` based on given arguments.
 pub fn generate_equivocation_proof(
-	vote1: (u64, Payload, ValidatorSetId, &Keyring<ecdsa_crypto::AuthorityId>),
-	vote2: (u64, Payload, ValidatorSetId, &Keyring<ecdsa_crypto::AuthorityId>),
-) -> EquivocationProof<u64, ecdsa_crypto::Public, ecdsa_crypto::Signature> {
+	vote1: (u64, Payload, ValidatorSetId, &Keyring<bls_crypto::AuthorityId>),
+	vote2: (u64, Payload, ValidatorSetId, &Keyring<bls_crypto::AuthorityId>),
+) -> EquivocationProof<u64, bls_crypto::Public, bls_crypto::Signature> {
 	let signed_vote = |block_number: u64,
 	                   payload: Payload,
 	                   validator_set_id: ValidatorSetId,
-	                   keyring: &Keyring<ecdsa_crypto::AuthorityId>| {
+	                   keyring: &Keyring<bls_crypto::AuthorityId>| {
 		let commitment = Commitment { validator_set_id, block_number, payload };
 		let signature = keyring.sign(&commitment.encode());
 		VoteMessage { commitment, id: keyring.public(), signature }

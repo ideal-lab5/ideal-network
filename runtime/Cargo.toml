@@ -1,13 +1,12 @@
 [package]
-name = "kitchensink-runtime"
-version = "3.0.0-dev"
+name = "ideal-nw-runtime"
+description = "Ideal Network Runtime"
+version = "0.0.0"
+license = "MIT-0"
 authors.workspace = true
-description = "Substrate node kitchensink runtime."
-edition.workspace = true
-build = "build.rs"
-license = "Apache-2.0"
-homepage = "https://substrate.io"
+homepage.workspace = true
 repository.workspace = true
+edition.workspace = true
 publish = false
 
 [lints]
@@ -16,420 +15,214 @@ workspace = true
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 
-[dependencies]
-
-# third-party dependencies
-codec = { package = "parity-scale-codec", version = "3.6.1", default-features = false, features = [
-	"derive",
-	"max-encoded-len",
-] }
-scale-info = { version = "2.10.0", default-features = false, features = ["derive", "serde"] }
-static_assertions = "1.1.0"
-log = { workspace = true }
-serde_json = { features = ["alloc", "arbitrary_precision"], workspace = true }
-
-# pallet-asset-conversion: turn on "num-traits" feature
-primitive-types = { version = "0.12.0", default-features = false, features = ["codec", "num-traits", "scale-info"] }
-
-# primitives
-sp-authority-discovery = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, features = ["serde"] }
-sp-consensus-babe = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, features = ["serde"] }
-# sp-consensus-beefy-etf-etf = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, features = ["bls-experimental"] }
-sp-consensus-beefy-etf = { path = "../primitives/consensus/beefy-etf", default-features = false, features = ["bls-experimental"]}
-sp-consensus-grandpa = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, features = ["serde"] }
-sp-block-builder = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-sp-genesis-builder = { default-features = false, git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-inherents = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-node-primitives = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-sp-mixnet = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-sp-offchain = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-sp-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, features = ["serde"] }
-sp-std = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-sp-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-sp-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, features = ["serde"] }
-sp-staking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, features = ["serde"] }
-sp-storage = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-sp-session = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-sp-transaction-pool = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-sp-statement-store = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, features = ["serde"] }
-sp-version = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, features = ["serde"] }
-sp-io = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-
-# frame dependencies
-frame-executive = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-frame-benchmarking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-frame-benchmarking-pallet-pov = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-frame-support = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, features = ["experimental", "tuples-96"] }
-frame-system = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-frame-system-benchmarking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, optional = true }
-frame-election-provider-support = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-frame-system-rpc-runtime-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-frame-try-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, optional = true }
-pallet-alliance = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-asset-conversion = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-asset-rate = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-assets = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-authority-discovery = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-authorship = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-babe = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-bags-list = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-balances = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-# pallet-beefy-etf = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-beefy-etf = { path = "../pallets/beefy-etf",  default-features = false }
-# pallet-beefy-etf-mmr = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-beefy-mmr-etf = { path = "../pallets/beefy-mmr-etf",  default-features = false }
-pallet-bounties = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-broker = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-child-bounties = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-collective = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-contracts = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-conviction-voting = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-core-fellowship = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-democracy = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-election-provider-multi-phase = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-election-provider-support-benchmarking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, optional = true }
-pallet-elections-phragmen = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-etf = { path = "../pallets/etf", default-features = false}
-pallet-example-tasks = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-fast-unstake = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-migrations = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-nis = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-grandpa = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-im-online = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-indices = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-identity = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-lottery = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-membership = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-message-queue = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-mixnet = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-mmr = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-multisig = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-nfts = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-nfts-runtime-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-nft-fractionalization = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-nomination-pools = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-nomination-pools-benchmarking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, optional = true }
-pallet-nomination-pools-runtime-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-offences = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-offences-benchmarking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, optional = true }
-pallet-glutton = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-preimage = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-proxy = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-insecure-randomness-collective-flip = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-ranked-collective = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-recovery = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-referenda = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-remark = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-root-testing = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-salary = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-session = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, features = ["historical"] }
-pallet-session-benchmarking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false, optional = true }
-pallet-staking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-staking-reward-curve = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-staking-runtime-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-state-trie-migration = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-statement = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-scheduler = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-society = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-sudo = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-timestamp = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-tips = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-treasury = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-utility = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-transaction-payment = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-asset-conversion-tx-payment = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-asset-tx-payment = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-skip-feeless-payment = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-transaction-storage = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-uniques = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-vesting = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-whitelist = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-tx-pause = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-safe-mode = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-pallet-parameters = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
-
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", optional = true }
 
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = [
+	"derive",
+] }
+hex-literal = { version = "0.4.1", optional = true }
+log = { workspace = true }
+scale-info = { version = "2.11.1", default-features = false, features = [
+	"derive",
+] }
+smallvec = "1.11.0"
+
+# Local
+# pallet-parachain-template = { path = "../pallets/template", default-features = false }
+
+# ETF
+sp-consensus-beefy-etf = { path = "../primitives/consensus/beefy-etf", default-features = false, features = ["bls-experimental"]}
+pallet-beefy-etf = { path = "../pallets/beefy-etf",  default-features = false }
+pallet-beefy-mmr-etf = { path = "../pallets/beefy-mmr-etf",  default-features = false }
+pallet-etf = { path = "../pallets/etf", default-features = false}
+
+# Substrate / FRAME
+frame-benchmarking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false, optional = true }
+frame-executive = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+frame-metadata-hash-extension = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+frame-support = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+frame-system = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+frame-system-benchmarking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false, optional = true }
+frame-system-rpc-runtime-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+frame-try-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false, optional = true }
+
+# FRAME Pallets
+pallet-aura = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+pallet-authorship = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+# pallet-assets = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+# pallet-asset-conversion-tx-payment = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+pallet-balances = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+# pallet-indices = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+pallet-message-queue = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+pallet-mmr = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
+pallet-offences = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
+pallet-session = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+pallet-sudo = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+pallet-timestamp = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+pallet-transaction-payment = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+# pallet-skip-feeless-payment = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev",  default-features = false }
+
+# Substrate	Primitives
+sp-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+sp-block-builder = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+sp-consensus-aura = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+sp-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+sp-genesis-builder = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+sp-inherents = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+sp-offchain = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+sp-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+sp-session = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+sp-std = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+sp-transaction-pool = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+sp-version = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+
+# Polkadot
+pallet-xcm = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+polkadot-parachain-primitives = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+polkadot-runtime-common = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+xcm = { package = "staging-xcm", git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+xcm-builder = { package = "staging-xcm-builder", git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+xcm-executor = { package = "staging-xcm-executor", git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+
+# Cumulus
+cumulus-pallet-aura-ext = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+cumulus-pallet-parachain-system = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+cumulus-pallet-session-benchmarking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+cumulus-pallet-xcm = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+cumulus-pallet-xcmp-queue = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+cumulus-primitives-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+cumulus-primitives-utility = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+cumulus-primitives-storage-weight-reclaim = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+pallet-collator-selection = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+parachains-common = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+parachain-info = { package = "staging-parachain-info", git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
+
 [features]
 default = ["std"]
-with-tracing = ["frame-executive/with-tracing"]
 std = [
 	"codec/std",
-	"frame-benchmarking-pallet-pov/std",
-	"frame-benchmarking/std",
-	"frame-election-provider-support/std",
+	"cumulus-pallet-aura-ext/std",
+	"cumulus-pallet-parachain-system/std",
+	"cumulus-pallet-session-benchmarking/std",
+	"cumulus-pallet-xcm/std",
+	"cumulus-pallet-xcmp-queue/std",
+	"cumulus-primitives-core/std",
+	"cumulus-primitives-storage-weight-reclaim/std",
+	"cumulus-primitives-utility/std",
+	"frame-benchmarking?/std",
 	"frame-executive/std",
+	"frame-metadata-hash-extension/std",
 	"frame-support/std",
 	"frame-system-benchmarking?/std",
 	"frame-system-rpc-runtime-api/std",
 	"frame-system/std",
 	"frame-try-runtime?/std",
 	"log/std",
-	"node-primitives/std",
-	"pallet-alliance/std",
-	"pallet-asset-conversion-tx-payment/std",
-	"pallet-asset-conversion/std",
-	"pallet-asset-rate/std",
-	"pallet-asset-tx-payment/std",
-	"pallet-assets/std",
-	"pallet-authority-discovery/std",
+	"pallet-aura/std",
 	"pallet-authorship/std",
-	"pallet-babe/std",
-	"pallet-bags-list/std",
 	"pallet-balances/std",
-	"pallet-beefy-mmr-etf/std",
-	"pallet-beefy-etf/std",
-	"pallet-bounties/std",
-	"pallet-broker/std",
-	"pallet-child-bounties/std",
-	"pallet-collective/std",
-	"pallet-contracts/std",
-	"pallet-conviction-voting/std",
-	"pallet-core-fellowship/std",
-	"pallet-democracy/std",
-	"pallet-election-provider-multi-phase/std",
-	"pallet-election-provider-support-benchmarking?/std",
-	"pallet-elections-phragmen/std",
-	"pallet-etf/std",
-	"pallet-example-tasks/std",
-	"pallet-fast-unstake/std",
-	"pallet-glutton/std",
-	"pallet-grandpa/std",
-	"pallet-identity/std",
-	"pallet-im-online/std",
-	"pallet-indices/std",
-	"pallet-insecure-randomness-collective-flip/std",
-	"pallet-lottery/std",
-	"pallet-membership/std",
-	"pallet-message-queue/std",
-	"pallet-migrations/std",
-	"pallet-mixnet/std",
-	"pallet-mmr/std",
-	"pallet-multisig/std",
-	"pallet-nft-fractionalization/std",
-	"pallet-nfts-runtime-api/std",
-	"pallet-nfts/std",
-	"pallet-nis/std",
-	"pallet-nomination-pools-benchmarking?/std",
-	"pallet-nomination-pools-runtime-api/std",
-	"pallet-nomination-pools/std",
-	"pallet-offences-benchmarking?/std",
+	"pallet-collator-selection/std",
+	# "pallet-indices/std",
 	"pallet-offences/std",
-	"pallet-parameters/std",
-	"pallet-preimage/std",
-	"pallet-proxy/std",
-	"pallet-ranked-collective/std",
-	"pallet-recovery/std",
-	"pallet-referenda/std",
-	"pallet-remark/std",
-	"pallet-root-testing/std",
-	"pallet-safe-mode/std",
-	"pallet-salary/std",
-	"pallet-scheduler/std",
-	"pallet-session-benchmarking?/std",
+	"pallet-message-queue/std",
+	"pallet-mmr/std",
+	# "pallet-parachain-template/std",
 	"pallet-session/std",
-	"pallet-skip-feeless-payment/std",
-	"pallet-society/std",
-	"pallet-staking-runtime-api/std",
-	"pallet-staking/std",
-	"pallet-state-trie-migration/std",
-	"pallet-statement/std",
+	# "pallet-skip-feeless-payment/runtime-benchmarks",
 	"pallet-sudo/std",
 	"pallet-timestamp/std",
-	"pallet-tips/std",
 	"pallet-transaction-payment-rpc-runtime-api/std",
 	"pallet-transaction-payment/std",
-	"pallet-transaction-storage/std",
-	"pallet-treasury/std",
-	"pallet-tx-pause/std",
-	"pallet-uniques/std",
-	"pallet-utility/std",
-	"pallet-vesting/std",
-	"pallet-whitelist/std",
-	"primitive-types/std",
+	"pallet-xcm/std",
+	"parachain-info/std",
+	"parachains-common/std",
+	"polkadot-parachain-primitives/std",
+	"polkadot-runtime-common/std",
 	"scale-info/std",
-	"serde_json/std",
 	"sp-api/std",
-	"sp-authority-discovery/std",
 	"sp-block-builder/std",
-	"sp-consensus-babe/std",
-	"sp-consensus-beefy-etf/std",
-	"sp-consensus-grandpa/std",
+	"sp-consensus-aura/std",
 	"sp-core/std",
 	"sp-genesis-builder/std",
 	"sp-inherents/std",
-	"sp-io/std",
-	"sp-mixnet/std",
 	"sp-offchain/std",
 	"sp-runtime/std",
 	"sp-session/std",
-	"sp-staking/std",
-	"sp-statement-store/std",
 	"sp-std/std",
-	"sp-storage/std",
 	"sp-transaction-pool/std",
 	"sp-version/std",
 	"substrate-wasm-builder",
+	"xcm-builder/std",
+	"xcm-executor/std",
+	"xcm/std",
+	"sp-consensus-beefy-etf/std",
+	"pallet-etf/std",
+	"pallet-beefy-mmr-etf/std",
+	"pallet-beefy-etf/std",
 ]
+
 runtime-benchmarks = [
-	"frame-benchmarking-pallet-pov/runtime-benchmarks",
+	"cumulus-pallet-parachain-system/runtime-benchmarks",
+	"cumulus-pallet-session-benchmarking/runtime-benchmarks",
+	"cumulus-pallet-xcmp-queue/runtime-benchmarks",
+	"cumulus-primitives-core/runtime-benchmarks",
+	"cumulus-primitives-utility/runtime-benchmarks",
 	"frame-benchmarking/runtime-benchmarks",
-	"frame-election-provider-support/runtime-benchmarks",
 	"frame-support/runtime-benchmarks",
 	"frame-system-benchmarking/runtime-benchmarks",
 	"frame-system/runtime-benchmarks",
-	"pallet-alliance/runtime-benchmarks",
-	"pallet-asset-conversion/runtime-benchmarks",
-	"pallet-asset-rate/runtime-benchmarks",
-	"pallet-asset-tx-payment/runtime-benchmarks",
-	"pallet-assets/runtime-benchmarks",
-	"pallet-babe/runtime-benchmarks",
-	"pallet-bags-list/runtime-benchmarks",
+	"hex-literal",
+	# "pallet-assets/runtime-benchmarks",
 	"pallet-balances/runtime-benchmarks",
-	"pallet-bounties/runtime-benchmarks",
-	"pallet-broker/runtime-benchmarks",
-	"pallet-child-bounties/runtime-benchmarks",
-	"pallet-collective/runtime-benchmarks",
-	"pallet-contracts/runtime-benchmarks",
-	"pallet-conviction-voting/runtime-benchmarks",
-	"pallet-core-fellowship/runtime-benchmarks",
-	"pallet-democracy/runtime-benchmarks",
-	"pallet-election-provider-multi-phase/runtime-benchmarks",
-	"pallet-election-provider-support-benchmarking/runtime-benchmarks",
-	"pallet-elections-phragmen/runtime-benchmarks",
-	"pallet-example-tasks/runtime-benchmarks",
-	"pallet-fast-unstake/runtime-benchmarks",
-	"pallet-glutton/runtime-benchmarks",
-	"pallet-grandpa/runtime-benchmarks",
-	"pallet-identity/runtime-benchmarks",
-	"pallet-im-online/runtime-benchmarks",
-	"pallet-indices/runtime-benchmarks",
-	"pallet-lottery/runtime-benchmarks",
-	"pallet-membership/runtime-benchmarks",
-	"pallet-message-queue/runtime-benchmarks",
-	"pallet-migrations/runtime-benchmarks",
-	"pallet-mixnet/runtime-benchmarks",
-	"pallet-mmr/runtime-benchmarks",
-	"pallet-multisig/runtime-benchmarks",
-	"pallet-nft-fractionalization/runtime-benchmarks",
-	"pallet-nfts/runtime-benchmarks",
-	"pallet-nis/runtime-benchmarks",
-	"pallet-nomination-pools-benchmarking/runtime-benchmarks",
-	"pallet-nomination-pools/runtime-benchmarks",
-	"pallet-offences-benchmarking/runtime-benchmarks",
+	"pallet-collator-selection/runtime-benchmarks",
+	# "pallet-indices/runtime-benchmarks",
 	"pallet-offences/runtime-benchmarks",
-	"pallet-parameters/runtime-benchmarks",
-	"pallet-preimage/runtime-benchmarks",
-	"pallet-proxy/runtime-benchmarks",
-	"pallet-ranked-collective/runtime-benchmarks",
-	"pallet-recovery/runtime-benchmarks",
-	"pallet-referenda/runtime-benchmarks",
-	"pallet-remark/runtime-benchmarks",
-	"pallet-safe-mode/runtime-benchmarks",
-	"pallet-salary/runtime-benchmarks",
-	"pallet-scheduler/runtime-benchmarks",
-	"pallet-session-benchmarking/runtime-benchmarks",
-	"pallet-skip-feeless-payment/runtime-benchmarks",
-	"pallet-society/runtime-benchmarks",
-	"pallet-staking/runtime-benchmarks",
-	"pallet-state-trie-migration/runtime-benchmarks",
+	"pallet-message-queue/runtime-benchmarks",
+	"pallet-mmr/runtime-benchmarks",
+	# "pallet-parachain-template/runtime-benchmarks",
 	"pallet-sudo/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
-	"pallet-tips/runtime-benchmarks",
-	"pallet-transaction-storage/runtime-benchmarks",
-	"pallet-treasury/runtime-benchmarks",
-	"pallet-tx-pause/runtime-benchmarks",
-	"pallet-uniques/runtime-benchmarks",
-	"pallet-utility/runtime-benchmarks",
-	"pallet-vesting/runtime-benchmarks",
-	"pallet-whitelist/runtime-benchmarks",
+	"pallet-xcm/runtime-benchmarks",
+	"parachains-common/runtime-benchmarks",
+	"polkadot-parachain-primitives/runtime-benchmarks",
+	"polkadot-runtime-common/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
-	"sp-staking/runtime-benchmarks",
+	"xcm-builder/runtime-benchmarks",
+	"xcm-executor/runtime-benchmarks",
 ]
+
 try-runtime = [
-	"frame-benchmarking-pallet-pov/try-runtime",
-	"frame-election-provider-support/try-runtime",
+	"cumulus-pallet-aura-ext/try-runtime",
+	"cumulus-pallet-parachain-system/try-runtime",
+	"cumulus-pallet-xcm/try-runtime",
+	"cumulus-pallet-xcmp-queue/try-runtime",
 	"frame-executive/try-runtime",
 	"frame-support/try-runtime",
 	"frame-system/try-runtime",
 	"frame-try-runtime/try-runtime",
-	"pallet-alliance/try-runtime",
-	"pallet-asset-conversion-tx-payment/try-runtime",
-	"pallet-asset-conversion/try-runtime",
-	"pallet-asset-rate/try-runtime",
-	"pallet-asset-tx-payment/try-runtime",
-	"pallet-assets/try-runtime",
-	"pallet-authority-discovery/try-runtime",
+	"pallet-aura/try-runtime",
 	"pallet-authorship/try-runtime",
-	"pallet-babe/try-runtime",
-	"pallet-bags-list/try-runtime",
+	# "pallet-assets/try-runtime",
+	# "pallet-asset-conversion-tx-payment/try-runtime",
 	"pallet-balances/try-runtime",
-	"pallet-beefy-mmr-etf/try-runtime",
-	"pallet-beefy-etf/try-runtime",
-	"pallet-bounties/try-runtime",
-	"pallet-broker/try-runtime",
-	"pallet-child-bounties/try-runtime",
-	"pallet-collective/try-runtime",
-	"pallet-contracts/try-runtime",
-	"pallet-conviction-voting/try-runtime",
-	"pallet-core-fellowship/try-runtime",
-	"pallet-democracy/try-runtime",
-	"pallet-election-provider-multi-phase/try-runtime",
-	"pallet-elections-phragmen/try-runtime",
-	"pallet-example-tasks/try-runtime",
-	"pallet-fast-unstake/try-runtime",
-	"pallet-glutton/try-runtime",
-	"pallet-grandpa/try-runtime",
-	"pallet-identity/try-runtime",
-	"pallet-im-online/try-runtime",
-	"pallet-indices/try-runtime",
-	"pallet-insecure-randomness-collective-flip/try-runtime",
-	"pallet-lottery/try-runtime",
-	"pallet-membership/try-runtime",
-	"pallet-message-queue/try-runtime",
-	"pallet-migrations/try-runtime",
-	"pallet-mixnet/try-runtime",
-	"pallet-mmr/try-runtime",
-	"pallet-multisig/try-runtime",
-	"pallet-nft-fractionalization/try-runtime",
-	"pallet-nfts/try-runtime",
-	"pallet-nis/try-runtime",
-	"pallet-nomination-pools/try-runtime",
+	"pallet-collator-selection/try-runtime",
+	# "pallet-indices/try-runtime",
 	"pallet-offences/try-runtime",
-	"pallet-parameters/try-runtime",
-	"pallet-preimage/try-runtime",
-	"pallet-proxy/try-runtime",
-	"pallet-ranked-collective/try-runtime",
-	"pallet-recovery/try-runtime",
-	"pallet-referenda/try-runtime",
-	"pallet-remark/try-runtime",
-	"pallet-root-testing/try-runtime",
-	"pallet-safe-mode/try-runtime",
-	"pallet-salary/try-runtime",
-	"pallet-scheduler/try-runtime",
+	"pallet-message-queue/try-runtime",
+	"pallet-mmr/try-runtime",
+	# "pallet-parachain-template/try-runtime",
 	"pallet-session/try-runtime",
-	"pallet-skip-feeless-payment/try-runtime",
-	"pallet-society/try-runtime",
-	"pallet-staking/try-runtime",
-	"pallet-state-trie-migration/try-runtime",
-	"pallet-statement/try-runtime",
+	# "pallet-skip-feeless-payment/try-runtime",
 	"pallet-sudo/try-runtime",
 	"pallet-timestamp/try-runtime",
-	"pallet-tips/try-runtime",
 	"pallet-transaction-payment/try-runtime",
-	"pallet-transaction-storage/try-runtime",
-	"pallet-treasury/try-runtime",
-	"pallet-tx-pause/try-runtime",
-	"pallet-uniques/try-runtime",
-	"pallet-utility/try-runtime",
-	"pallet-vesting/try-runtime",
-	"pallet-whitelist/try-runtime",
+	"pallet-xcm/try-runtime",
+	"parachain-info/try-runtime",
+	"polkadot-runtime-common/try-runtime",
 	"sp-runtime/try-runtime",
-]
-experimental = [
-	"frame-support/experimental",
-	"frame-system/experimental",
-	"pallet-example-tasks/experimental",
+	"pallet-beefy-mmr-etf/try-runtime",
+	"pallet-beefy-etf/try-runtime",
 ]

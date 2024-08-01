@@ -501,7 +501,7 @@ pub(crate) mod tests {
 	use sc_network_test::Block;
 	use sp_application_crypto::key_types::BEEFY as BEEFY_KEY_TYPE;
 	use sp_consensus_beefy_etf::{
-		ecdsa_crypto::Signature, known_payloads, test_utils::Keyring, Commitment, MmrRootHash,
+		bls_crypto::Signature, known_payloads, test_utils::Keyring, Commitment, MmrRootHash,
 		Payload, SignedCommitment, VoteMessage,
 	};
 	use sp_keystore::{testing::MemoryKeystore, Keystore};
@@ -528,7 +528,7 @@ pub(crate) mod tests {
 		commitment: &Commitment<BN>,
 	) -> Signature {
 		let store = MemoryKeystore::new();
-		store.ecdsa_generate_new(BEEFY_KEY_TYPE, Some(&who.to_seed())).unwrap();
+		store.bls377_generate_new(BEEFY_KEY_TYPE, Some(&who.to_seed())).unwrap();
 		let beefy_keystore: BeefyKeystore<AuthorityId> = Some(store.into()).into();
 		beefy_keystore.sign(&who.public(), &commitment.encode()).unwrap()
 	}
@@ -570,7 +570,7 @@ pub(crate) mod tests {
 	#[test]
 	fn should_validate_messages() {
 		let keys = vec![Keyring::<AuthorityId>::Alice.public()];
-		let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), 0).unwrap();
+		let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), keys.clone(), 0).unwrap();
 		let (gv, mut report_stream) =
 			GossipValidator::<Block>::new(Arc::new(Mutex::new(KnownPeers::new())));
 		let sender = PeerId::random();
@@ -661,7 +661,7 @@ pub(crate) mod tests {
 		assert_eq!(report_stream.try_recv().unwrap(), expected_report);
 
 		// reject proof, future set_id
-		let bad_validator_set = ValidatorSet::<AuthorityId>::new(keys, 1).unwrap();
+		let bad_validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), keys, 1).unwrap();
 		let proof = dummy_proof(20, &bad_validator_set);
 		let encoded_proof = GossipMessage::<Block>::FinalityProof(proof).encode();
 		let res = gv.validate(&mut context, &sender, &encoded_proof);
@@ -671,7 +671,7 @@ pub(crate) mod tests {
 
 		// reject proof, bad signatures (Bob instead of Alice)
 		let bad_validator_set =
-			ValidatorSet::<AuthorityId>::new(vec![Keyring::Bob.public()], 0).unwrap();
+			ValidatorSet::<AuthorityId>::new(vec![Keyring::Bob.public()], vec![Keyring::Bob.public()], 0).unwrap();
 		let proof = dummy_proof(21, &bad_validator_set);
 		let encoded_proof = GossipMessage::<Block>::FinalityProof(proof).encode();
 		let res = gv.validate(&mut context, &sender, &encoded_proof);
@@ -684,7 +684,7 @@ pub(crate) mod tests {
 	#[test]
 	fn messages_allowed_and_expired() {
 		let keys = vec![Keyring::Alice.public()];
-		let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), 0).unwrap();
+		let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), keys.clone(), 0).unwrap();
 		let (gv, _) = GossipValidator::<Block>::new(Arc::new(Mutex::new(KnownPeers::new())));
 		gv.update_filter(GossipFilterCfg { start: 0, end: 10, validator_set: &validator_set });
 		let sender = sc_network::PeerId::random();
@@ -720,7 +720,7 @@ pub(crate) mod tests {
 		assert!(allowed(&sender, intent, &topic, &mut encoded_proof));
 		assert!(!expired(topic, &mut encoded_proof));
 		// using wrong set_id -> !allowed, expired
-		let bad_validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), 1).unwrap();
+		let bad_validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), keys.clone(), 1).unwrap();
 		let proof = dummy_proof(2, &bad_validator_set);
 		let mut encoded_proof = GossipMessage::<Block>::FinalityProof(proof).encode();
 		assert!(!allowed(&sender, intent, &topic, &mut encoded_proof));
@@ -761,7 +761,7 @@ pub(crate) mod tests {
 	#[test]
 	fn messages_rebroadcast() {
 		let keys = vec![Keyring::Alice.public()];
-		let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), 0).unwrap();
+		let validator_set = ValidatorSet::<AuthorityId>::new(keys.clone(), keys.clone(), 0).unwrap();
 		let (gv, _) = GossipValidator::<Block>::new(Arc::new(Mutex::new(KnownPeers::new())));
 		gv.update_filter(GossipFilterCfg { start: 0, end: 10, validator_set: &validator_set });
 		let sender = sc_network::PeerId::random();

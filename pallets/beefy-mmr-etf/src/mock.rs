@@ -25,7 +25,7 @@ use frame_support::{
 use sp_consensus_beefy_etf::mmr::MmrLeafVersion;
 use sp_io::TestExternalities;
 use sp_runtime::{
-	app_crypto::ecdsa::Public,
+	app_crypto::bls377::Public,
 	impl_opaque_keys,
 	traits::{ConvertInto, Keccak256, OpaqueKeys},
 	BuildStorage,
@@ -35,7 +35,7 @@ use sp_state_machine::BasicExternalities;
 use crate as pallet_beefy_mmr;
 
 pub use sp_consensus_beefy_etf::{
-	ecdsa_crypto::AuthorityId as BeefyId, mmr::BeefyDataProvider, ConsensusLog, BEEFY_ENGINE_ID,
+	bls_crypto::AuthorityId as BeefyId, mmr::BeefyDataProvider, ConsensusLog, BEEFY_ENGINE_ID,
 };
 
 impl_opaque_keys! {
@@ -92,6 +92,8 @@ impl pallet_mmr::Config for Test {
 	type OnNewRoot = pallet_beefy_mmr::DepositBeefyDigest<Test>;
 
 	type WeightInfo = ();
+
+	type BlockHashProvider = pallet_mmr::DefaultBlockHashProvider<Test>;
 }
 
 impl pallet_etf::Config for Test {
@@ -118,7 +120,7 @@ parameter_types! {
 impl pallet_beefy_mmr::Config for Test {
 	type LeafVersion = LeafVersion;
 
-	type BeefyAuthorityToMerkleLeaf = pallet_beefy_mmr::BeefyEcdsaToEthereum;
+	type BeefyAuthorityToMerkleLeaf = pallet_beefy_mmr::BeefyBlsToEthereum;
 
 	type LeafExtra = Vec<u8>;
 
@@ -158,7 +160,7 @@ impl pallet_session::SessionManager<u64> for MockSessionManager {
 // ed25519 and sr25519 but *not* for ecdsa. A compressed ecdsa public key is 33 bytes,
 // with the first one containing information to reconstruct the uncompressed key.
 pub fn mock_beefy_id(id: u8) -> BeefyId {
-	let mut buf: [u8; 33] = [id; 33];
+	let mut buf: [u8; 144] = [id; 144];
 	// Set to something valid.
 	buf[0] = 0x02;
 	let pk = Public::from_raw(buf);

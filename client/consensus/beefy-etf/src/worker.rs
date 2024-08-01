@@ -1207,7 +1207,7 @@ pub(crate) mod tests {
 	use sp_consensus_beefy_etf::{
 		known_payloads,
 		known_payloads::MMR_ROOT_ID,
-		mmr::MmrRootProvider,
+	mmr::MmrRootProvider,
 		test_utils::{generate_equivocation_proof, Keyring},
 		ConsensusLog, Payload, SignedCommitment,
 	};
@@ -1442,45 +1442,49 @@ pub(crate) mod tests {
 			oracle.voting_target()
 		};
 
-		// rounds not initialized -> should vote: `None`
-		assert_eq!(voting_target_with(&mut oracle, 0, 1), None);
+		// we force a vote on top of each finalized block at the moment
+		// I am keeping the rest of the original test for posterity,
+		// as we aim to modify this logic later on
+		assert_eq!(voting_target_with(&mut oracle, 0, 1), Some(1));
+		// // rounds not initialized -> should vote: `None`
+		// assert_eq!(voting_target_with(&mut oracle, 0, 1), None);
 
-		let keys = &[Keyring::Alice];
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+		// let keys = &[Keyring::Alice];
+		// let validator_set = ValidatorSet::new(make_beefy_ids(keys),make_beefy_ids(keys), 0).unwrap();
 
-		oracle.add_session(Rounds::new(1, validator_set.clone()));
+		// oracle.add_session(Rounds::new(1, validator_set.clone()));
 
-		// under min delta
-		oracle.min_block_delta = 4;
-		assert_eq!(voting_target_with(&mut oracle, 1, 1), None);
-		assert_eq!(voting_target_with(&mut oracle, 2, 5), None);
+		// // under min delta
+		// oracle.min_block_delta = 4;
+		// assert_eq!(voting_target_with(&mut oracle, 1, 1), None);
+		// assert_eq!(voting_target_with(&mut oracle, 2, 5), None);
 
-		// vote on min delta
-		assert_eq!(voting_target_with(&mut oracle, 4, 9), Some(8));
-		oracle.min_block_delta = 8;
-		assert_eq!(voting_target_with(&mut oracle, 10, 18), Some(18));
+		// // vote on min delta
+		// assert_eq!(voting_target_with(&mut oracle, 4, 9), Some(8));
+		// oracle.min_block_delta = 8;
+		// assert_eq!(voting_target_with(&mut oracle, 10, 18), Some(18));
 
-		// vote on power of two
-		oracle.min_block_delta = 1;
-		assert_eq!(voting_target_with(&mut oracle, 1000, 1008), Some(1004));
-		assert_eq!(voting_target_with(&mut oracle, 1000, 1016), Some(1008));
+		// // vote on power of two
+		// oracle.min_block_delta = 1;
+		// assert_eq!(voting_target_with(&mut oracle, 1000, 1008), Some(1004));
+		// assert_eq!(voting_target_with(&mut oracle, 1000, 1016), Some(1008));
 
-		// nothing new to vote on
-		assert_eq!(voting_target_with(&mut oracle, 1000, 1000), None);
+		// // nothing new to vote on
+		// assert_eq!(voting_target_with(&mut oracle, 1000, 1000), None);
 
-		// vote on mandatory
-		oracle.sessions.clear();
-		oracle.add_session(Rounds::new(1000, validator_set.clone()));
-		assert_eq!(voting_target_with(&mut oracle, 0, 1008), Some(1000));
-		oracle.sessions.clear();
-		oracle.add_session(Rounds::new(1001, validator_set.clone()));
-		assert_eq!(voting_target_with(&mut oracle, 1000, 1008), Some(1001));
+		// // vote on mandatory
+		// oracle.sessions.clear();
+		// oracle.add_session(Rounds::new(1000, validator_set.clone()));
+		// assert_eq!(voting_target_with(&mut oracle, 0, 1008), Some(1000));
+		// oracle.sessions.clear();
+		// oracle.add_session(Rounds::new(1001, validator_set.clone()));
+		// assert_eq!(voting_target_with(&mut oracle, 1000, 1008), Some(1001));
 	}
 
 	#[test]
 	fn test_oracle_accepted_interval() {
 		let keys = &[Keyring::Alice];
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(keys), make_beefy_ids(keys), 0).unwrap();
 
 		let header = Header::new(
 			1u32.into(),
@@ -1575,7 +1579,7 @@ pub(crate) mod tests {
 
 		let peers = &[Keyring::One, Keyring::Two];
 		let id = 42;
-		let validator_set = ValidatorSet::new(make_beefy_ids(peers), id).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(peers), make_beefy_ids(peers), id).unwrap();
 		header.digest_mut().push(DigestItem::Consensus(
 			BEEFY_ENGINE_ID,
 			ConsensusLog::<AuthorityId>::AuthoritiesChange(validator_set.clone()).encode(),
@@ -1589,7 +1593,7 @@ pub(crate) mod tests {
 	#[tokio::test]
 	async fn keystore_vs_validator_set() {
 		let keys = &[Keyring::Alice];
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(keys), make_beefy_ids(keys), 0).unwrap();
 		let mut net = BeefyTestNet::new(1);
 		let mut worker = create_beefy_worker(net.peer(0), &keys[0], 1, validator_set.clone());
 
@@ -1598,7 +1602,7 @@ pub(crate) mod tests {
 
 		// unknown `Bob` key
 		let keys = &[Keyring::Bob];
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(keys), make_beefy_ids(keys), 0).unwrap();
 		let err_msg = "no authority public key found in store".to_string();
 		let expected = Err(Error::Keystore(err_msg));
 		assert_eq!(verify_validator_set::<Block>(&1, &validator_set, &worker.key_store), expected);
@@ -1615,7 +1619,7 @@ pub(crate) mod tests {
 	#[tokio::test]
 	async fn should_finalize_correctly() {
 		let keys = [Keyring::Alice];
-		let validator_set = ValidatorSet::new(make_beefy_ids(&keys), 0).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(&keys), make_beefy_ids(&keys), 0).unwrap();
 		let mut net = BeefyTestNet::new(1);
 		let backend = net.peer(0).client().as_backend();
 		let mut worker = create_beefy_worker(net.peer(0), &keys[0], 1, validator_set.clone());
@@ -1720,7 +1724,7 @@ pub(crate) mod tests {
 	#[tokio::test]
 	async fn should_init_session() {
 		let keys = &[Keyring::Alice, Keyring::Bob];
-		let validator_set = ValidatorSet::new(make_beefy_ids(keys), 0).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(keys), make_beefy_ids(keys), 0).unwrap();
 		let mut net = BeefyTestNet::new(1);
 		let mut worker = create_beefy_worker(net.peer(0), &keys[0], 1, validator_set.clone());
 
@@ -1731,7 +1735,7 @@ pub(crate) mod tests {
 
 		// new validator set
 		let keys = &[Keyring::Bob];
-		let new_validator_set = ValidatorSet::new(make_beefy_ids(keys), 1).unwrap();
+		let new_validator_set = ValidatorSet::new(make_beefy_ids(keys), make_beefy_ids(keys), 1).unwrap();
 
 		worker.init_session_at(new_validator_set.clone(), 11);
 		// Since mandatory is not done for old rounds, we still get those.
@@ -1753,7 +1757,7 @@ pub(crate) mod tests {
 		let block_num = 1;
 		let set_id = 1;
 		let keys = [Keyring::Alice];
-		let validator_set = ValidatorSet::new(make_beefy_ids(&keys), set_id).unwrap();
+		let validator_set = ValidatorSet::new(make_beefy_ids(&keys), make_beefy_ids(&keys), set_id).unwrap();
 		// Alice votes on good MMR roots, equivocations are allowed/expected
 		let mut api_alice = TestApi::with_validator_set(&validator_set);
 		api_alice.allow_equivocations();

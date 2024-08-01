@@ -28,7 +28,7 @@ use frame_support::{
 use pallet_session::historical as pallet_session_historical;
 use sp_core::{crypto::KeyTypeId, ConstU128};
 use sp_runtime::{
-	app_crypto::ecdsa::Public, curve::PiecewiseLinear, impl_opaque_keys, testing::TestXt,
+	app_crypto::bls377::Public, curve::PiecewiseLinear, impl_opaque_keys, testing::TestXt,
 	traits::OpaqueKeys, BuildStorage, Perbill,
 };
 use sp_staking::{EraIndex, SessionIndex};
@@ -36,11 +36,7 @@ use sp_state_machine::BasicExternalities;
 
 use crate as pallet_beefy;
 
-#[cfg(feature = "bls-experimental")]
 pub use sp_consensus_beefy_etf::bls_crypto::AuthorityId as BeefyId;
-
-#[cfg(not(feature = "bls-experimental"))]
-pub use sp_consensus_beefy_etf::ecdsa_crypto::AuthorityId as BeefyId;
 
 pub use sp_consensus_beefy_etf::{
 	ConsensusLog, BEEFY_ENGINE_ID
@@ -203,7 +199,7 @@ impl pallet_staking::Config for Test {
 	type UnixTime = pallet_timestamp::Pallet<Test>;
 	type EraPayout = pallet_staking::ConvertCurve<RewardCurve>;
 	type MaxExposurePageSize = ConstU32<64>;
-	type OffendingValidatorsThreshold = OffendingValidatorsThreshold;
+	// type OffendingValidatorsThreshold = OffendingValidatorsThreshold;
 	type NextNewSession = Session;
 	type ElectionProvider = onchain::OnChainExecution<OnChainSeqPhragmen>;
 	type GenesisElectionProvider = Self::ElectionProvider;
@@ -216,6 +212,7 @@ impl pallet_staking::Config for Test {
 	type EventListeners = ();
 	type BenchmarkingConfig = pallet_staking::TestBenchmarkingConfig;
 	type WeightInfo = ();
+	type DisablingStrategy = pallet_staking::UpToLimitDisablingStrategy;
 }
 
 impl pallet_offences::Config for Test {
@@ -324,7 +321,7 @@ impl ExtBuilder {
 // ed25519 and sr25519 but *not* for ecdsa. A compressed ecdsa public key is 33 bytes,
 // with the first one containing information to reconstruct the uncompressed key.
 pub fn mock_beefy_id(id: u8) -> BeefyId {
-	let mut buf: [u8; 33] = [id; 33];
+	let mut buf: [u8; 144] = [id; 144];
 	// Set to something valid.
 	buf[0] = 0x02;
 	let pk = Public::from_raw(buf);

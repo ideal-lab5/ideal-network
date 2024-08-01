@@ -1,84 +1,8 @@
-// This file is part of Substrate.
+use std::path::PathBuf;
 
-// Copyright (C) Parity Technologies (UK) Ltd.
-// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-/// An overarching CLI command definition.
-#[derive(Debug, clap::Parser)]
-pub struct Cli {
-	/// Possible subcommand with parameters.
-	#[command(subcommand)]
-	pub subcommand: Option<Subcommand>,
-
-	#[allow(missing_docs)]
-	#[clap(flatten)]
-	pub run: sc_cli::RunCmd,
-
-	#[allow(missing_docs)]
-	#[clap(flatten)]
-	pub mixnet_params: sc_cli::MixnetParams,
-
-	/// Disable automatic hardware benchmarks.
-	///
-	/// By default these benchmarks are automatically ran at startup and measure
-	/// the CPU speed, the memory bandwidth and the disk speed.
-	///
-	/// The results are then printed out in the logs, and also sent as part of
-	/// telemetry, if telemetry is enabled.
-	#[arg(long)]
-	pub no_hardware_benchmarks: bool,
-
-	#[allow(missing_docs)]
-	#[clap(flatten)]
-	pub storage_monitor: sc_storage_monitor::StorageMonitorParams,
-}
-
-/// Possible subcommands of the main binary.
+/// Sub-commands supported by the collator.
 #[derive(Debug, clap::Subcommand)]
 pub enum Subcommand {
-	/// The custom inspect subcommmand for decoding blocks and extrinsics.
-	#[command(
-		name = "inspect",
-		about = "Decode given block or extrinsic using current native runtime."
-	)]
-	Inspect(node_inspect::cli::InspectCmd),
-
-	/// Sub-commands concerned with benchmarking.
-	/// The pallet benchmarking moved to the `pallet` sub-command.
-	#[command(subcommand)]
-	Benchmark(frame_benchmarking_cli::BenchmarkCmd),
-
-	/// Try-runtime has migrated to a standalone CLI
-	/// (<https://github.com/paritytech/try-runtime-cli>). The subcommand exists as a stub and
-	/// deprecation notice. It will be removed entirely some time after January 2024.
-	TryRuntime,
-
-	/// Key management cli utilities
-	#[command(subcommand)]
-	Key(sc_cli::KeySubcommand),
-
-	/// Verify a signature for a message, provided on STDIN, with a given (public or secret) key.
-	Verify(sc_cli::VerifyCmd),
-
-	/// Generate a seed that provides a vanity address.
-	Vanity(sc_cli::VanityCmd),
-
-	/// Sign a message, with a given (secret) key.
-	Sign(sc_cli::SignCmd),
-
 	/// Build a chain specification.
 	BuildSpec(sc_cli::BuildSpecCmd),
 
@@ -94,12 +18,93 @@ pub enum Subcommand {
 	/// Import blocks.
 	ImportBlocks(sc_cli::ImportBlocksCmd),
 
-	/// Remove the whole chain.
-	PurgeChain(sc_cli::PurgeChainCmd),
-
 	/// Revert the chain to a previous state.
 	Revert(sc_cli::RevertCmd),
 
-	/// Db meta columns information.
-	ChainInfo(sc_cli::ChainInfoCmd),
+	/// Remove the whole chain.
+	PurgeChain(cumulus_client_cli::PurgeChainCmd),
+
+	/// Export the genesis head data of the parachain.
+	///
+	/// Head data is the encoded block header.
+	#[command(alias = "export-genesis-state")]
+	ExportGenesisHead(cumulus_client_cli::ExportGenesisHeadCommand),
+
+	/// Export the genesis wasm of the parachain.
+	ExportGenesisWasm(cumulus_client_cli::ExportGenesisWasmCommand),
+
+	/// Sub-commands concerned with benchmarking.
+	/// The pallet benchmarking moved to the `pallet` sub-command.
+	#[command(subcommand)]
+	Benchmark(frame_benchmarking_cli::BenchmarkCmd),
+}
+
+const AFTER_HELP_EXAMPLE: &str = color_print::cstr!(
+	r#"<bold><underline>Examples:</></>
+   <bold>parachain-template-node build-spec --disable-default-bootnode > plain-parachain-chainspec.json</>
+           Export a chainspec for a local testnet in json format.
+   <bold>parachain-template-node --chain plain-parachain-chainspec.json --tmp -- --chain rococo-local</>
+           Launch a full node with chain specification loaded from plain-parachain-chainspec.json.
+   <bold>parachain-template-node</>
+           Launch a full node with default parachain <italic>local-testnet</> and relay chain <italic>rococo-local</>.
+   <bold>parachain-template-node --collator</>
+           Launch a collator with default parachain <italic>local-testnet</> and relay chain <italic>rococo-local</>.
+ "#
+);
+#[derive(Debug, clap::Parser)]
+#[command(
+	propagate_version = true,
+	args_conflicts_with_subcommands = true,
+	subcommand_negates_reqs = true
+)]
+#[clap(after_help = AFTER_HELP_EXAMPLE)]
+pub struct Cli {
+	#[command(subcommand)]
+	pub subcommand: Option<Subcommand>,
+
+	#[command(flatten)]
+	pub run: cumulus_client_cli::RunCmd,
+
+	/// Disable automatic hardware benchmarks.
+	///
+	/// By default these benchmarks are automatically ran at startup and measure
+	/// the CPU speed, the memory bandwidth and the disk speed.
+	///
+	/// The results are then printed out in the logs, and also sent as part of
+	/// telemetry, if telemetry is enabled.
+	#[arg(long)]
+	pub no_hardware_benchmarks: bool,
+
+	/// Relay chain arguments
+	#[arg(raw = true)]
+	pub relay_chain_args: Vec<String>,
+}
+
+#[derive(Debug)]
+pub struct RelayChainCli {
+	/// The actual relay chain cli object.
+	pub base: polkadot_cli::RunCmd,
+
+	/// Optional chain id that should be passed to the relay chain.
+	pub chain_id: Option<String>,
+
+	/// The base path that should be used by the relay chain.
+	pub base_path: Option<PathBuf>,
+}
+
+impl RelayChainCli {
+	/// Parse the relay chain CLI parameters using the para chain `Configuration`.
+	pub fn new<'a>(
+		para_config: &sc_service::Configuration,
+		relay_chain_args: impl Iterator<Item = &'a String>,
+	) -> Self {
+		let extension = crate::chain_spec::Extensions::try_get(&*para_config.chain_spec);
+		let chain_id = extension.map(|e| e.relay_chain.clone());
+		let base_path = para_config.base_path.path().join("polkadot");
+		Self {
+			base_path: Some(base_path),
+			chain_id,
+			base: clap::Parser::parse_from(relay_chain_args),
+		}
+	}
 }

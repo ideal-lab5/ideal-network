@@ -21,11 +21,7 @@ use crate::LOG_TARGET;
 use codec::{Decode, Encode};
 use log::{debug, info};
 
-#[cfg(feature = "bls-experimental")]
 use sp_consensus_beefy_etf::bls_crypto::{AuthorityId, Signature}; 
-
-#[cfg(not(feature = "bls-experimental"))]
-use sp_consensus_beefy_etf::ecdsa_crypto::{AuthorityId, Signature}; 
 
 use sp_consensus_beefy_etf::{
 	Commitment, EquivocationProof, SignedCommitment, ValidatorSet, ValidatorSetId, VoteMessage,
@@ -268,6 +264,7 @@ mod tests {
 
 		let validators = ValidatorSet::<AuthorityId>::new(
 			vec![Keyring::Alice.public(), Keyring::Bob.public(), Keyring::Charlie.public()],
+			vec![Keyring::Alice.public(), Keyring::Bob.public(), Keyring::Charlie.public()],
 			42,
 		)
 		.unwrap();
@@ -292,6 +289,12 @@ mod tests {
 		sp_tracing::try_init_simple();
 
 		let validators = ValidatorSet::<AuthorityId>::new(
+			vec![
+				Keyring::Alice.public(),
+				Keyring::Bob.public(),
+				Keyring::Charlie.public(),
+				Keyring::Eve.public(),
+			],
 			vec![
 				Keyring::Alice.public(),
 				Keyring::Bob.public(),
@@ -359,6 +362,7 @@ mod tests {
 
 		let validators = ValidatorSet::<AuthorityId>::new(
 			vec![Keyring::Alice.public(), Keyring::Bob.public(), Keyring::Charlie.public()],
+			vec![Keyring::Alice.public(), Keyring::Bob.public(), Keyring::Charlie.public()],
 			42,
 		)
 		.unwrap();
@@ -404,6 +408,7 @@ mod tests {
 		sp_tracing::try_init_simple();
 
 		let validators = ValidatorSet::<AuthorityId>::new(
+			vec![Keyring::Alice.public(), Keyring::Bob.public(), Keyring::Charlie.public()],
 			vec![Keyring::Alice.public(), Keyring::Bob.public(), Keyring::Charlie.public()],
 			Default::default(),
 		)
@@ -479,6 +484,7 @@ mod tests {
 		sp_tracing::try_init_simple();
 
 		let validators = ValidatorSet::<AuthorityId>::new(
+			vec![Keyring::Alice.public(), Keyring::Bob.public()],
 			vec![Keyring::Alice.public(), Keyring::Bob.public()],
 			Default::default(),
 		)
