@@ -304,6 +304,10 @@ mod runtime {
 	#[runtime::pallet_index(33)]
 	pub type MessageQueue = pallet_message_queue;
 
+	// Drand
+	#[runtime::pallet_index(40)]
+	pub type Drand = pallet_drand;
+
 	// Template
 	#[runtime::pallet_index(50)]
 	pub type TemplatePallet = pallet_parachain_template;

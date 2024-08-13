@@ -40,8 +40,24 @@ use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerH
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_keystore::KeystorePtr;
 
+/// Host runctions required for Substrate and Arkworks
+#[cfg(not(feature = "runtime-benchmarks"))]
+pub type HostFunctions =
+	(
+		ParachainHostFunctions, 
+		sp_crypto_ec_utils::bls12_381::host_calls::HostFunctions
+	);
+
+/// Host runctions required for Substrate and Arkworks
+#[cfg(feature = "runtime-benchmarks")]
+pub type HostFunctions = (
+	ParachainHostFunctions,
+	sp_crypto_ec_utils::bls12_381::host_calls::HostFunctions,
+	frame_benchmarking::benchmarking::HostFunctions,
+);
+
 #[docify::export(wasm_executor)]
-type ParachainExecutor = WasmExecutor<ParachainHostFunctions>;
+type ParachainExecutor = WasmExecutor<HostFunctions>;
 
 type ParachainClient = TFullClient<Block, RuntimeApi, ParachainExecutor>;
 
@@ -293,7 +309,7 @@ pub async fn start_parachain_node(
 				)),
 				network_provider: Arc::new(network.clone()),
 				is_validator: parachain_config.role.is_authority(),
-				enable_http_requests: false,
+				enable_http_requests: true,
 				custom_extensions: move |_| vec![],
 			})
 			.run(client.clone(), task_manager.spawn_handle())

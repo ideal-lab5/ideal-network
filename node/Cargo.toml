@@ -51,6 +51,7 @@ sp-block-builder = { workspace = true, default-features = true }
 sp-blockchain = { workspace = true, default-features = true }
 sp-consensus-aura = { workspace = true, default-features = true }
 sp-core = { workspace = true, default-features = true }
+sp-crypto-ec-utils = { workspace = true, default-features = true, features=["bls12-381"] }
 sp-keystore = { workspace = true, default-features = true }
 sp-io = { workspace = true, default-features = true }
 sp-runtime = { workspace = true, default-features = true }

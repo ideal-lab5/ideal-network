@@ -37,6 +37,9 @@ futures = { version = "0.3.30" }
 # Local
 ideal-nw-runtime = { path = "runtime", default-features = false }
 
+# Ideal Network
+pallet-drand = { path = "../pallet-drand/", default-features = false }
+
 # Substrate
 frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk.git", default-features = false }
 frame-benchmarking-cli = { git = "https://github.com/paritytech/polkadot-sdk.git", default-features = false }
@@ -68,6 +71,7 @@ sp-block-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", def
 sp-blockchain = { git = "https://github.com/paritytech/polkadot-sdk.git", default-features = false }
 sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk.git", default-features = false }
 sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", default-features = false }
+sp-crypto-ec-utils = { git = "https://github.com/paritytech/polkadot-sdk.git", default-features = false }
 sp-genesis-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", default-features = false }
 sp-keystore = { git = "https://github.com/paritytech/polkadot-sdk.git", default-features = false }
 sp-io = { git = "https://github.com/paritytech/polkadot-sdk.git", default-features = false }
