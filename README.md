@@ -60,6 +60,34 @@ and run them with:
     --output /pallets/etf/src/weight.rs
 ```
 
+## Local Development Chain
+
+🧟 This project uses [Zombienet](https://github.com/paritytech/zombienet) to orchestrate the relaychain and parachain nodes.
+You can grab a [released binary](https://github.com/paritytech/zombienet/releases/latest) or use an [npm version](https://www.npmjs.com/package/@zombienet/cli).
+
+This template produces a parachain node.
+You still need a relaychain node - you can download the `polkadot`
+(and the accompanying `polkadot-prepare-worker` and `polkadot-execute-worker`)
+binaries from [Polkadot SDK releases](https://github.com/paritytech/polkadot-sdk/releases/latest).
+
+Make sure to bring the parachain node - as well as `polkadot`, `polkadot-prepare-worker`, `polkadot-execute-worker`,
+and `zombienet` - into `PATH` like so:
+
+```sh
+export PATH="./target/release/:$PATH"
+```
+
+This way, we can conveniently use them in the following steps.
+
+👥 The following command starts a local development chain, with a single relay chain node and a single parachain collator:
+
+```sh
+zombienet --provider native spawn ./zombienet.toml
+
+# Alternatively, the npm version:
+npx --yes @zombienet/cli --provider native spawn ./zombienet.toml
+```
+
 ## How to run IDL NW Parachain 
 
 https://docs.substrate.io/tutorials/build-a-parachain/prepare-a-local-relay-chain/
