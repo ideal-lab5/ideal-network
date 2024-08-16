@@ -41,7 +41,7 @@ use frame_support::{
 };
 use frame_system::{
     limits::{BlockLength, BlockWeights},
-    EnsureRoot,
+    EnsureRoot, EnsureSigned,
 };
 use pallet_xcm::{EnsureXcm, IsVoiceOfBody};
 use parachains_common::message_queue::{NarrowOriginToSibling, ParaIdToSibling};
@@ -51,6 +51,7 @@ use polkadot_runtime_common::{
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_runtime::{
     generic::{Era, SignedPayload},
+    traits::StaticLookup,
     Perbill, SaturatedConversion,
 };
 use sp_version::RuntimeVersion;
@@ -191,7 +192,8 @@ impl pallet_drand::Config for Runtime {
     // TODO: check this
     type AuthorityId = pallet_drand::crypto::TestAuthId;
     type Verifier = pallet_drand::QuicknetVerifier;
-    type UpdateOrigin = EnsureRoot<AccountId>;
+    // TODO: WARNING This should be EnsureRoot in production, for some reason the OCW can't be recognized as root
+    type UpdateOrigin = EnsureSigned<AccountId>;
 }
 
 impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
@@ -207,7 +209,10 @@ where
         RuntimeCall,
         <UncheckedExtrinsic as sp_runtime::traits::Extrinsic>::SignaturePayload,
     )> {
-        let period = BlockHashCount::get() as u64;
+        let period = BlockHashCount::get()
+            .checked_next_power_of_two()
+            .map(|c| c / 2)
+            .unwrap_or(2) as u64;
         let current_block = System::block_number()
             .saturated_into::<u64>()
             .saturating_sub(1);
@@ -221,10 +226,10 @@ where
             frame_system::CheckNonce::<Runtime>::from(nonce),
             frame_system::CheckWeight::<Runtime>::new(),
             pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
-			// TODO: Check this
-			cumulus_primitives_storage_weight_reclaim::StorageWeightReclaim::<Runtime>::new(),
-			// TODO: Check this
-			frame_metadata_hash_extension::CheckMetadataHash::<Runtime>::new(false),
+            // TODO: Check this
+            cumulus_primitives_storage_weight_reclaim::StorageWeightReclaim::<Runtime>::new(),
+            // TODO: Check this
+            frame_metadata_hash_extension::CheckMetadataHash::<Runtime>::new(false),
         );
 
         let raw_payload = SignedPayload::new(call, extra)
@@ -233,16 +238,9 @@ where
             })
             .ok()?;
         let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
-        let address = account;
+        let address = <Runtime as frame_system::Config>::Lookup::unlookup(account);
         let (call, extra, _) = raw_payload.deconstruct();
-        Some((
-            call,
-            (
-                sp_runtime::MultiAddress::Id(address),
-                signature.into(),
-                extra,
-            ),
-        ))
+        Some((call, (address, signature.into(), extra)))
     }
 }
 
