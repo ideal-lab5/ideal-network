@@ -169,7 +169,7 @@ pub fn rococo_testnet_config() -> ChainSpec {
         Extensions {
             relay_chain: "rococo".into(),
             // You MUST set this to the correct network!
-            para_id: 4462,
+            para_id: 4506,
         },
     )
     .with_name("IDN Rococo Testnet")
@@ -180,7 +180,7 @@ pub fn rococo_testnet_config() -> ChainSpec {
         vec![(collator_acc.clone())],
         vec![collator_acc.clone(), stash_acc],
         collator_acc,
-        4462.into(),
+        4506.into(),
     ))
     .with_protocol_id("idn-roc")
     .with_properties(properties)
