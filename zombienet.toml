@@ -13,7 +13,7 @@ validator = true
 ws_port = 9955
 
 [[parachains]]
-id = 1000
+id = 2000
 
 [[parachains.collators]]
 name = "alice"
