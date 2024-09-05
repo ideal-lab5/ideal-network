@@ -41,7 +41,7 @@ use frame_support::{
 };
 use frame_system::{
     limits::{BlockLength, BlockWeights},
-    EnsureRoot, EnsureSigned,
+    EnsureRoot,
 };
 use pallet_xcm::{EnsureXcm, IsVoiceOfBody};
 use parachains_common::message_queue::{NarrowOriginToSibling, ParaIdToSibling};
@@ -186,14 +186,17 @@ impl pallet_sudo::Config for Runtime {
     type WeightInfo = ();
 }
 
+parameter_types! {
+    pub const UnsignedPriority: u64 = 1 << 20;
+}
+
 impl pallet_drand::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type WeightInfo = pallet_drand::weights::SubstrateWeight<Runtime>;
     // TODO: check this
     type AuthorityId = pallet_drand::crypto::TestAuthId;
     type Verifier = pallet_drand::QuicknetVerifier;
-    // TODO: WARNING This should be EnsureRoot in production, for some reason the OCW can't be recognized as root
-    type UpdateOrigin = EnsureSigned<AccountId>;
+    type UnsignedPriority = UnsignedPriority;
 }
 
 impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
