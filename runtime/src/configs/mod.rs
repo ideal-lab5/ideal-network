@@ -64,7 +64,7 @@ use super::{
     MessageQueue, Nonce, PalletInfo, ParachainSystem, Runtime, RuntimeCall, RuntimeEvent,
     RuntimeFreezeReason, RuntimeHoldReason, RuntimeOrigin, RuntimeTask, Session, SessionKeys,
     Signature, System, UncheckedExtrinsic, WeightToFee, XcmpQueue, AVERAGE_ON_INITIALIZE_RATIO,
-    EXISTENTIAL_DEPOSIT, HOURS, MAXIMUM_BLOCK_WEIGHT, MICRO_UNIT, NORMAL_DISPATCH_RATIO,
+    EXISTENTIAL_DEPOSIT, HOURS, MAXIMUM_BLOCK_WEIGHT, MICROUNIT, NORMAL_DISPATCH_RATIO,
     SLOT_DURATION, VERSION,
 };
 use xcm_config::{RelayLocation, XcmOriginToTransactDispatchOrigin};
@@ -168,7 +168,7 @@ impl pallet_balances::Config for Runtime {
 
 parameter_types! {
     /// Relay Chain `TransactionByteFee` / 10
-    pub const TransactionByteFee: Balance = 10 * MICRO_UNIT;
+    pub const TransactionByteFee: Balance = 10 * MICROUNIT;
 }
 
 impl pallet_transaction_payment::Config for Runtime {
@@ -184,80 +184,6 @@ impl pallet_sudo::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type RuntimeCall = RuntimeCall;
     type WeightInfo = ();
-}
-
-parameter_types! {
-    pub const UnsignedPriority: u64 = 1 << 20;
-}
-
-impl pallet_drand::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type WeightInfo = pallet_drand::weights::SubstrateWeight<Runtime>;
-    // TODO: check this
-    type AuthorityId = pallet_drand::crypto::TestAuthId;
-    type Verifier = pallet_drand::QuicknetVerifier;
-    type UnsignedPriority = UnsignedPriority;
-}
-
-impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
-where
-    RuntimeCall: From<LocalCall>,
-{
-    fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
-        call: RuntimeCall,
-        public: <Signature as sp_runtime::traits::Verify>::Signer,
-        account: AccountId,
-        nonce: Nonce,
-    ) -> Option<(
-        RuntimeCall,
-        <UncheckedExtrinsic as sp_runtime::traits::Extrinsic>::SignaturePayload,
-    )> {
-        let period = BlockHashCount::get()
-            .checked_next_power_of_two()
-            .map(|c| c / 2)
-            .unwrap_or(2) as u64;
-        let current_block = System::block_number()
-            .saturated_into::<u64>()
-            .saturating_sub(1);
-        let tip = 0;
-        let extra: crate::SignedExtra = (
-            frame_system::CheckNonZeroSender::<Runtime>::new(),
-            frame_system::CheckSpecVersion::<Runtime>::new(),
-            frame_system::CheckTxVersion::<Runtime>::new(),
-            frame_system::CheckGenesis::<Runtime>::new(),
-            frame_system::CheckEra::<Runtime>::from(Era::mortal(period, current_block)),
-            frame_system::CheckNonce::<Runtime>::from(nonce),
-            frame_system::CheckWeight::<Runtime>::new(),
-            pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
-            // TODO: Check this
-            cumulus_primitives_storage_weight_reclaim::StorageWeightReclaim::<Runtime>::new(),
-            // TODO: Check this
-            frame_metadata_hash_extension::CheckMetadataHash::<Runtime>::new(false),
-        );
-
-        let raw_payload = SignedPayload::new(call, extra)
-            .map_err(|e| {
-                log::warn!("Unable to create signed payload: {:?}", e);
-            })
-            .ok()?;
-        let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
-        let address = <Runtime as frame_system::Config>::Lookup::unlookup(account);
-        let (call, extra, _) = raw_payload.deconstruct();
-        Some((call, (address, signature.into(), extra)))
-    }
-}
-
-impl frame_system::offchain::SigningTypes for Runtime {
-    type Public = <Signature as sp_runtime::traits::Verify>::Signer;
-    type Signature = Signature;
-}
-
-impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime
-where
-    RuntimeCall: From<C>,
-{
-    type OverarchingCall = RuntimeCall;
-    type Extrinsic = UncheckedExtrinsic;
 }
 
 parameter_types! {
@@ -345,7 +271,6 @@ impl pallet_session::Config for Runtime {
     type WeightInfo = ();
 }
 
-#[docify::export(aura_config)]
 impl pallet_aura::Config for Runtime {
     type AuthorityId = AuraId;
     type DisabledValidators = ();
@@ -387,4 +312,73 @@ impl pallet_collator_selection::Config for Runtime {
 impl pallet_parachain_template::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type WeightInfo = pallet_parachain_template::weights::SubstrateWeight<Runtime>;
+}
+
+impl pallet_drand::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = pallet_drand::weights::SubstrateWeight<Runtime>;
+    type AuthorityId = pallet_drand::crypto::TestAuthId;
+    type Verifier = pallet_drand::UnsafeSkipVerifier;
+    type UnsignedPriority = ConstU64<{ 1 << 20 }>;
+}
+
+impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
+where
+    RuntimeCall: From<LocalCall>,
+{
+    fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
+        call: RuntimeCall,
+        public: <Signature as sp_runtime::traits::Verify>::Signer,
+        account: AccountId,
+        nonce: Nonce,
+    ) -> Option<(
+        RuntimeCall,
+        <UncheckedExtrinsic as sp_runtime::traits::Extrinsic>::SignaturePayload,
+    )> {
+        let period = BlockHashCount::get()
+            .checked_next_power_of_two()
+            .map(|c| c / 2)
+            .unwrap_or(2) as u64;
+        let current_block = System::block_number()
+            .saturated_into::<u64>()
+            .saturating_sub(1);
+        let tip = 0;
+        let extra: crate::SignedExtra = (
+            frame_system::CheckNonZeroSender::<Runtime>::new(),
+            frame_system::CheckSpecVersion::<Runtime>::new(),
+            frame_system::CheckTxVersion::<Runtime>::new(),
+            frame_system::CheckGenesis::<Runtime>::new(),
+            frame_system::CheckEra::<Runtime>::from(Era::mortal(period, current_block)),
+            frame_system::CheckNonce::<Runtime>::from(nonce),
+            frame_system::CheckWeight::<Runtime>::new(),
+            pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+            // TODO: Check this
+            cumulus_primitives_storage_weight_reclaim::StorageWeightReclaim::<Runtime>::new(),
+            // TODO: Check this
+            frame_metadata_hash_extension::CheckMetadataHash::<Runtime>::new(false),
+        );
+
+        let raw_payload = SignedPayload::new(call, extra)
+            .map_err(|e| {
+                log::warn!("Unable to create signed payload: {:?}", e);
+            })
+            .ok()?;
+        let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
+        let address = <Runtime as frame_system::Config>::Lookup::unlookup(account);
+        let (call, extra, _) = raw_payload.deconstruct();
+        Some((call, (address, signature.into(), extra)))
+    }
+}
+
+impl frame_system::offchain::SigningTypes for Runtime {
+    type Public = <Signature as sp_runtime::traits::Verify>::Signer;
+    type Signature = Signature;
+}
+
+impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime
+where
+    RuntimeCall: From<C>,
+{
+    type OverarchingCall = RuntimeCall;
+    type Extrinsic = UncheckedExtrinsic;
 }

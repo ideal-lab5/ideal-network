@@ -12,7 +12,6 @@ use ideal_nw_runtime::{
 
 // Cumulus Imports
 use cumulus_client_collator::service::CollatorService;
-#[docify::export(lookahead_collator)]
 use cumulus_client_consensus_aura::collators::lookahead::{self as aura, Params as AuraParams};
 use cumulus_client_consensus_common::ParachainBlockImport as TParachainBlockImport;
 use cumulus_client_consensus_proposer::Proposer;
@@ -21,7 +20,6 @@ use cumulus_client_service::{
 	BuildNetworkParams, CollatorSybilResistance, DARecoveryProfile, ParachainHostFunctions,
 	StartRelayChainTasksParams,
 };
-#[docify::export(cumulus_primitives)]
 use cumulus_primitives_core::{
 	relay_chain::{CollatorPair, ValidationCode},
 	ParaId,
@@ -35,29 +33,14 @@ use sc_client_api::Backend;
 use sc_consensus::ImportQueue;
 use sc_executor::{HeapAllocStrategy, WasmExecutor, DEFAULT_HEAP_ALLOC_STRATEGY};
 use sc_network::NetworkBlock;
+use sc_network_sync::SyncingService;
 use sc_service::{Configuration, PartialComponents, TFullBackend, TFullClient, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerHandle};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_keystore::KeystorePtr;
 
-/// Host runctions required for Substrate and Arkworks
-#[cfg(not(feature = "runtime-benchmarks"))]
-pub type HostFunctions =
-	(
-		ParachainHostFunctions, 
-		sp_crypto_ec_utils::bls12_381::host_calls::HostFunctions
-	);
-
-/// Host runctions required for Substrate and Arkworks
-#[cfg(feature = "runtime-benchmarks")]
-pub type HostFunctions = (
-	ParachainHostFunctions,
-	sp_crypto_ec_utils::bls12_381::host_calls::HostFunctions,
-	frame_benchmarking::benchmarking::HostFunctions,
-);
-
 #[docify::export(wasm_executor)]
-type ParachainExecutor = WasmExecutor<HostFunctions>;
+type ParachainExecutor = WasmExecutor<ParachainHostFunctions>;
 
 type ParachainClient = TFullClient<Block, RuntimeApi, ParachainExecutor>;
 
@@ -187,6 +170,7 @@ fn start_consensus(
 	task_manager: &TaskManager,
 	relay_chain_interface: Arc<dyn RelayChainInterface>,
 	transaction_pool: Arc<sc_transaction_pool::FullPool<Block, ParachainClient>>,
+	sync_oracle: Arc<SyncingService<Block>>,
 	keystore: KeystorePtr,
 	relay_chain_slot_duration: Duration,
 	para_id: ParaId,
@@ -220,6 +204,7 @@ fn start_consensus(
 		code_hash_provider: move |block_hash| {
 			client.code_at(block_hash).ok().map(|c| ValidationCode::from(c).hash())
 		},
+		sync_oracle,
 		keystore,
 		collator_key,
 		para_id,
@@ -230,9 +215,11 @@ fn start_consensus(
 		authoring_duration: Duration::from_millis(2000),
 		reinitialize: false,
 	};
-	let fut = aura::run::<Block, sp_consensus_aura::sr25519::AuthorityPair, _, _, _, _, _, _, _, _>(
-		params,
-	);
+
+	let fut =
+		aura::run::<Block, sp_consensus_aura::sr25519::AuthorityPair, _, _, _, _, _, _, _, _, _>(
+			params,
+		);
 	task_manager.spawn_essential_handle().spawn("aura", None, fut);
 
 	Ok(())
@@ -251,13 +238,11 @@ pub async fn start_parachain_node(
 
 	let params = new_partial(&parachain_config)?;
 	let (block_import, mut telemetry, telemetry_worker_handle) = params.other;
-
-	let prometheus_registry = parachain_config.prometheus_registry().cloned();
 	let net_config = sc_network::config::FullNetworkConfiguration::<
 		_,
 		_,
 		sc_network::NetworkWorker<Block, Hash>,
-	>::new(&parachain_config.network, prometheus_registry.clone());
+	>::new(&parachain_config.network);
 
 	let client = params.client.clone();
 	let backend = params.backend.clone();
@@ -275,6 +260,7 @@ pub async fn start_parachain_node(
 	.map_err(|e| sc_service::Error::Application(Box::new(e) as Box<_>))?;
 
 	let validator = parachain_config.role.is_authority();
+	let prometheus_registry = parachain_config.prometheus_registry().cloned();
 	let transaction_pool = params.transaction_pool.clone();
 	let import_queue_service = params.import_queue.service();
 
@@ -410,6 +396,7 @@ pub async fn start_parachain_node(
 			&task_manager,
 			relay_chain_interface,
 			transaction_pool,
+			sync_service,
 			params.keystore_container.keystore(),
 			relay_chain_slot_duration,
 			para_id,
