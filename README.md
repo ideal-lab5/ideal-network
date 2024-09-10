@@ -2,6 +2,8 @@
 
 This repository contains implementations of the Ideal Network parachain node.
 
+**WARNING**: This is a work in progress and is not ready for production use as it is based on an [unsafe version of the Drand pallet](https://github.com/ideal-lab5/pallet-drand/blob/main/docs/how_it_works.md#assumption-and-limitations).
+
 ## Build
 
 Use the following command to build the node without launching it:
