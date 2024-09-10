@@ -1,13 +1,7 @@
 [workspace]
 members = [
-    # "client/consensus/beefy-etf",
-    # "client/consensus/beefy-etf/rpc",
     "node",
     "runtime",
-    # "pallets/beefy-etf",
-    # "pallets/beefy-mmr-etf",
-    # "pallets/etf",
-    # "primitives/consensus/beefy-etf",
 ]
 resolver = "2"
 
@@ -38,8 +32,7 @@ futures = { version = "0.3.30" }
 ideal-nw-runtime = { path = "runtime", default-features = false }
 
 # Ideal Network
-# pallet-drand = { git = "https://github.com/ideal-lab5/pallet-drand", default-features = false }
-pallet-drand = { path = "../pallet-drand", default-features = false }
+pallet-drand = { git = "https://github.com/ideal-lab5/pallet-drand", default-features = false }
 
 # Substrate
 frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "release-crates-io-v1.14.0", default-features = false }
