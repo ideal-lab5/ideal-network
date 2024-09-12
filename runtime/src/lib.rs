@@ -36,9 +36,6 @@ pub use sp_runtime::BuildStorage;
 
 use weights::ExtrinsicBaseWeight;
 
-/// Import the template pallet.
-pub use pallet_parachain_template;
-
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
 pub type Signature = MultiSignature;
 
@@ -295,10 +292,6 @@ mod runtime {
     // Drand
     #[runtime::pallet_index(40)]
     pub type Drand = pallet_drand;
-
-    // Template
-    #[runtime::pallet_index(50)]
-    pub type TemplatePallet = pallet_parachain_template;
 }
 
 cumulus_pallet_parachain_system::register_validate_block! {
