@@ -13,7 +13,7 @@ validator = true
 ws_port = 9955
 
 [[parachains]]
-id = 2000
+id = 1000
 chain = "dev"
 
 [[parachains.collators]]
