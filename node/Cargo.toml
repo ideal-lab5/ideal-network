@@ -1,7 +1,7 @@
 [package]
 name = "ideal-nw-node"
 description = "Ideal Network Node"
-version = "0.0.0"
+version = "0.1.0"
 license = "MIT-0"
 authors.workspace = true
 homepage.workspace = true
@@ -10,82 +10,106 @@ edition.workspace = true
 publish = false
 build = "build.rs"
 
-[lints]
-workspace = true
-
-# [[bin]]
-# name = "parachain-template-node"
-
 [dependencies]
-clap = { version = "4.5.3", features = ["derive"] }
+clap = { features = ["derive"], workspace = true }
 log = { workspace = true, default-features = true }
-codec = { package = "parity-scale-codec", version = "3.0.0" }
+codec = { workspace = true, default-features = true }
 serde = { features = ["derive"], workspace = true, default-features = true }
-jsonrpsee = { version = "0.22", features = ["server"] }
-futures = "0.3.28"
+jsonrpsee = { features = ["server"], workspace = true }
+futures = { workspace = true }
 serde_json = { workspace = true, default-features = true }
-ark-std = "0.4.0"
-ark-serialize = "0.4.0"
-rand = "0.8"
-w3f-bls = "0.1.3"
-etf-crypto-primitives = { git = "https://github.com/ideal-lab5/etf-sdk.git", branch = "w3fbls-migration" }
-
-# Local
-beefy = { package = "sc-consensus-beefy-etf", path = "../client/consensus/beefy-etf", features = ["bls-experimental"] }
-beefy-primitives = { package = "sp-consensus-beefy-etf", path = "../primitives/consensus/beefy-etf", features = ["bls-experimental"]}
-ideal-nw-runtime = { path = "../runtime" }
-
-# Substrate
-frame-benchmarking = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-frame-benchmarking-cli = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-pallet-transaction-payment-rpc = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-basic-authorship = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-chain-spec = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-cli = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-client-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-offchain = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-consensus = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-executor = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-network = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-network-sync = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-rpc = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-service = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-sysinfo = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-telemetry = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-tracing = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-transaction-pool = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sc-transaction-pool-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-api = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-block-builder = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-blockchain = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-consensus-aura = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-keystore = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-io = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-runtime = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-sp-timestamp = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-substrate-frame-rpc-system = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-substrate-prometheus-endpoint = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-
-# Polkadot
-polkadot-cli = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", features = ["rococo-native"] }
-polkadot-primitives = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-xcm = { package = "staging-xcm", git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev", default-features = false }
-
-# Cumulus
-cumulus-client-cli = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-cumulus-client-collator = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-cumulus-client-consensus-aura = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-cumulus-client-consensus-common = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-cumulus-client-consensus-proposer = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-cumulus-client-service = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-cumulus-primitives-core = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-cumulus-primitives-parachain-inherent = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-cumulus-relay-chain-interface = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
-color-print = "0.3.4"
+docify = { workspace = true }
+ideal-nw-runtime.workspace = true
+frame-benchmarking.workspace = true
+frame-benchmarking.default-features = true
+frame-benchmarking-cli.workspace = true
+frame-benchmarking-cli.default-features = true
+pallet-transaction-payment-rpc.workspace = true
+pallet-transaction-payment-rpc.default-features = true
+sc-basic-authorship.workspace = true
+sc-basic-authorship.default-features = true
+sc-chain-spec.workspace = true
+sc-chain-spec.default-features = true
+sc-cli.workspace = true
+sc-cli.default-features = true
+sc-client-api.workspace = true
+sc-client-api.default-features = true
+sc-offchain.workspace = true
+sc-offchain.default-features = true
+sc-consensus.workspace = true
+sc-consensus.default-features = true
+sc-executor.workspace = true
+sc-executor.default-features = true
+sc-network.workspace = true
+sc-network.default-features = true
+sc-network-sync.workspace = true
+sc-network-sync.default-features = true
+sc-rpc.workspace = true
+sc-rpc.default-features = true
+sc-service.workspace = true
+sc-service.default-features = true
+sc-sysinfo.workspace = true
+sc-sysinfo.default-features = true
+sc-telemetry.workspace = true
+sc-telemetry.default-features = true
+sc-tracing.workspace = true
+sc-tracing.default-features = true
+sc-transaction-pool.workspace = true
+sc-transaction-pool.default-features = true
+sc-transaction-pool-api.workspace = true
+sc-transaction-pool-api.default-features = true
+sp-api.workspace = true
+sp-api.default-features = true
+sp-block-builder.workspace = true
+sp-block-builder.default-features = true
+sp-blockchain.workspace = true
+sp-blockchain.default-features = true
+sp-consensus-aura.workspace = true
+sp-consensus-aura.default-features = true
+sp-core.workspace = true
+sp-core.default-features = true
+sp-crypto-ec-utils.workspace = true
+sp-crypto-ec-utils.default-features = true
+sp-crypto-ec-utils.features = ["bls12-381"]
+sp-keystore.workspace = true
+sp-keystore.default-features = true
+sp-io.workspace = true
+sp-io.default-features = true
+sp-runtime.workspace = true
+sp-runtime.default-features = true
+sp-timestamp.workspace = true
+sp-timestamp.default-features = true
+substrate-frame-rpc-system.workspace = true
+substrate-frame-rpc-system.default-features = true
+prometheus-endpoint.workspace = true
+prometheus-endpoint.default-features = true
+polkadot-cli = { features = ["rococo-native"], workspace = true, default-features = true }
+polkadot-primitives.workspace = true
+polkadot-primitives.default-features = true
+xcm.workspace = true
+cumulus-client-cli.workspace = true
+cumulus-client-cli.default-features = true
+cumulus-client-collator.workspace = true
+cumulus-client-collator.default-features = true
+cumulus-client-consensus-aura.workspace = true
+cumulus-client-consensus-aura.default-features = true
+cumulus-client-consensus-common.workspace = true
+cumulus-client-consensus-common.default-features = true
+cumulus-client-consensus-proposer.workspace = true
+cumulus-client-consensus-proposer.default-features = true
+cumulus-client-service.workspace = true
+cumulus-client-service.default-features = true
+cumulus-primitives-core.workspace = true
+cumulus-primitives-core.default-features = true
+cumulus-primitives-parachain-inherent.workspace = true
+cumulus-primitives-parachain-inherent.default-features = true
+cumulus-relay-chain-interface.workspace = true
+cumulus-relay-chain-interface.default-features = true
+color-print = { workspace = true }
 
 [build-dependencies]
-substrate-build-script-utils = { git = "https://github.com/ideal-lab5/polkadot-sdk.git", branch = "tony/dev" }
+substrate-build-script-utils.workspace = true
+substrate-build-script-utils.default-features = true
 
 [features]
 default = []

@@ -26,43 +26,32 @@
 mod xcm_config;
 
 // Substrate and Polkadot dependencies
-use crate::Vec;
 use codec::Encode;
-use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
+use cumulus_pallet_parachain_system::RelayNumberMonotonicallyIncreases;
 use cumulus_primitives_core::{AggregateMessageOrigin, ParaId};
 use frame_support::{
     derive_impl,
     dispatch::DispatchClass,
     parameter_types,
     traits::{
-        fungible::{
-            Balanced, Credit, HoldConsideration, ItemOf, NativeFromLeft, NativeOrWithId, UnionOf,
-        },
-        AsEnsureOriginWithArg, ConstBool, ConstU128, ConstU32, ConstU64, ConstU8, EitherOfDiverse,
-        KeyOwnerProofSystem, TransformOrigin,
+        ConstBool, ConstU32, ConstU64, ConstU8, EitherOfDiverse, TransformOrigin, VariantCountOf,
     },
     weights::{ConstantMultiplier, Weight},
     PalletId,
 };
 use frame_system::{
     limits::{BlockLength, BlockWeights},
-    EnsureRoot, EnsureSigned,
+    EnsureRoot,
 };
-// use pallet_asset_conversion::{Ascending, Chain, WithFirstAsset};
 use pallet_xcm::{EnsureXcm, IsVoiceOfBody};
 use parachains_common::message_queue::{NarrowOriginToSibling, ParaIdToSibling};
 use polkadot_runtime_common::{
     xcm_sender::NoPriceForMessageDelivery, BlockHashCount, SlowAdjustingFeeUpdate,
 };
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_consensus_beefy_etf::{
-    bls_crypto::{AuthorityId as BeefyId, Signature as BeefySignature},
-    mmr::MmrLeafVersion,
-};
-use sp_core::crypto::KeyTypeId;
 use sp_runtime::{
     generic::{Era, SignedPayload},
-    traits::{Convert, Extrinsic as TraitExtrinsic, Keccak256, StaticLookup, Verify},
+    traits::StaticLookup,
     Perbill, SaturatedConversion,
 };
 use sp_version::RuntimeVersion;
@@ -71,51 +60,12 @@ use xcm::latest::prelude::BodyId;
 // Local module imports
 use super::{
     weights::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight},
-    AccountId,
-    AccountIndex,
-    // Assets,
-    Aura,
-    Balance,
-    Balances,
-    Block,
-    BlockNumber,
-    CollatorSelection,
-    Etf,
-    Hash,
-    Historical,
-    MessageQueue,
-    MmrLeaf,
-    Nonce,
-    Offences,
-    PalletInfo,
-    ParachainSystem,
-    PolkadotXcm,
-    Runtime,
-    RuntimeCall,
-    RuntimeEvent,
-    RuntimeFreezeReason,
-    RuntimeHoldReason,
-    RuntimeOrigin,
-    RuntimeTask,
-    Session,
-    SessionKeys,
-    Signature,
-    System,
-    UncheckedExtrinsic,
-    WeightToFee,
-    XcmpQueue,
-    AVERAGE_ON_INITIALIZE_RATIO,
-    BLOCK_PROCESSING_VELOCITY,
-    EXISTENTIAL_DEPOSIT,
-    HOURS,
-    MAXIMUM_BLOCK_WEIGHT,
-    MICROUNIT,
-    NORMAL_DISPATCH_RATIO,
-    RELAY_CHAIN_SLOT_DURATION_MILLIS,
-    SLOT_DURATION,
-    UNINCLUDED_SEGMENT_CAPACITY,
-    UNIT,
-    VERSION,
+    AccountId, Aura, Balance, Balances, Block, BlockNumber, CollatorSelection, ConsensusHook, Hash,
+    MessageQueue, Nonce, PalletInfo, ParachainSystem, Runtime, RuntimeCall, RuntimeEvent,
+    RuntimeFreezeReason, RuntimeHoldReason, RuntimeOrigin, RuntimeTask, Session, SessionKeys,
+    Signature, System, UncheckedExtrinsic, WeightToFee, XcmpQueue, AVERAGE_ON_INITIALIZE_RATIO,
+    EXISTENTIAL_DEPOSIT, HOURS, MAXIMUM_BLOCK_WEIGHT, MICROUNIT, NORMAL_DISPATCH_RATIO,
+    SLOT_DURATION, VERSION,
 };
 use xcm_config::{RelayLocation, XcmOriginToTransactDispatchOrigin};
 
@@ -181,80 +131,11 @@ impl frame_system::Config for Runtime {
     type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
-impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
-where
-    RuntimeCall: From<LocalCall>,
-{
-    fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
-        call: RuntimeCall,
-        public: <Signature as Verify>::Signer,
-        account: AccountId,
-        nonce: Nonce,
-    ) -> Option<(
-        RuntimeCall,
-        <UncheckedExtrinsic as TraitExtrinsic>::SignaturePayload,
-    )> {
-        let tip = 0;
-        // take the biggest period possible.
-        let period = BlockHashCount::get()
-            .checked_next_power_of_two()
-            .map(|c| c / 2)
-            .unwrap_or(2) as u64;
-        let current_block = System::block_number()
-            .saturated_into::<u64>()
-            // The `System::block_number` is initialized with `n+1`,
-            // so the actual block number is `n`.
-            .saturating_sub(1);
-        let era = Era::mortal(period, current_block);
-        let extra = (
-            frame_system::CheckNonZeroSender::<Runtime>::new(),
-            frame_system::CheckSpecVersion::<Runtime>::new(),
-            frame_system::CheckTxVersion::<Runtime>::new(),
-            frame_system::CheckGenesis::<Runtime>::new(),
-            frame_system::CheckEra::<Runtime>::from(era),
-            frame_system::CheckNonce::<Runtime>::from(nonce),
-            frame_system::CheckWeight::<Runtime>::new(),
-            // TODO: Check this
-            pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(0),
-            // TODO: Check this
-            cumulus_primitives_storage_weight_reclaim::StorageWeightReclaim::<Runtime>::new(),
-            // TODO: Check this
-            frame_metadata_hash_extension::CheckMetadataHash::<Runtime>::new(false),
-        );
-        let raw_payload = SignedPayload::new(call, extra)
-            .map_err(|e| {
-                log::warn!("Unable to create signed payload: {:?}", e);
-            })
-            .ok()?;
-        let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
-        let address = <Runtime as frame_system::Config>::Lookup::unlookup(account);
-        let (call, extra, _) = raw_payload.deconstruct();
-        Some((call, (address, signature, extra)))
-    }
-}
-
-impl frame_system::offchain::SigningTypes for Runtime {
-    type Public = <Signature as Verify>::Signer;
-    type Signature = Signature;
-}
-
-impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime
-where
-    RuntimeCall: From<C>,
-{
-    type Extrinsic = UncheckedExtrinsic;
-    type OverarchingCall = RuntimeCall;
-}
-
-parameter_types! {
-    pub const IndexDeposit: Balance = 1 * UNIT;
-}
-
 impl pallet_timestamp::Config for Runtime {
     /// A timestamp: milliseconds since the unix epoch.
     type Moment = u64;
     type OnTimestampSet = Aura;
-    type MinimumPeriod = ConstU64<{ SLOT_DURATION / 2 }>;
+    type MinimumPeriod = ConstU64<0>;
     type WeightInfo = ();
 }
 
@@ -281,8 +162,8 @@ impl pallet_balances::Config for Runtime {
     type ReserveIdentifier = [u8; 8];
     type RuntimeHoldReason = RuntimeHoldReason;
     type RuntimeFreezeReason = RuntimeFreezeReason;
-    type FreezeIdentifier = ();
-    type MaxFreezes = ConstU32<0>;
+    type FreezeIdentifier = RuntimeFreezeReason;
+    type MaxFreezes = VariantCountOf<RuntimeFreezeReason>;
 }
 
 parameter_types! {
@@ -321,13 +202,8 @@ impl cumulus_pallet_parachain_system::Config for Runtime {
     type ReservedDmpWeight = ReservedDmpWeight;
     type XcmpMessageHandler = XcmpQueue;
     type ReservedXcmpWeight = ReservedXcmpWeight;
-    type CheckAssociatedRelayNumber = RelayNumberStrictlyIncreases;
-    type ConsensusHook = cumulus_pallet_aura_ext::FixedVelocityConsensusHook<
-        Runtime,
-        RELAY_CHAIN_SLOT_DURATION_MILLIS,
-        BLOCK_PROCESSING_VELOCITY,
-        UNINCLUDED_SEGMENT_CAPACITY,
-    >;
+    type CheckAssociatedRelayNumber = RelayNumberMonotonicallyIncreases;
+    type ConsensusHook = ConsensusHook;
 }
 
 impl parachain_info::Config for Runtime {}
@@ -353,7 +229,7 @@ impl pallet_message_queue::Config for Runtime {
     // The XCMP queue pallet is only ever able to handle the `Sibling(ParaId)` origin:
     type QueueChangeHandler = NarrowOriginToSibling<XcmpQueue>;
     type QueuePausedQuery = NarrowOriginToSibling<XcmpQueue>;
-    type HeapSize = sp_core::ConstU32<{ 64 * 1024 }>;
+    type HeapSize = sp_core::ConstU32<{ 103 * 1024 }>;
     type MaxStale = sp_core::ConstU32<8>;
     type ServiceWeight = MessageQueueServiceWeight;
     type IdleMaxServiceWeight = ();
@@ -369,9 +245,7 @@ impl cumulus_pallet_xcmp_queue::Config for Runtime {
     type XcmpQueue = TransformOrigin<MessageQueue, AggregateMessageOrigin, ParaId, ParaIdToSibling>;
     type MaxInboundSuspended = sp_core::ConstU32<1_000>;
     type MaxActiveOutboundChannels = ConstU32<128>;
-    // Most on-chain HRMP channels are configured to use 102400 bytes of max message size, so we
-    // need to set the page size larger than that until we reduce the channel size on-chain.
-    type MaxPageSize = ConstU32<{ 103 * 1024 }>;
+    type MaxPageSize = ConstU32<{ 1 << 16 }>;
     type ControllerOrigin = EnsureRoot<AccountId>;
     type ControllerOriginConverter = XcmOriginToTransactDispatchOrigin;
     type WeightInfo = ();
@@ -397,26 +271,12 @@ impl pallet_session::Config for Runtime {
     type WeightInfo = ();
 }
 
-impl pallet_session::historical::Config for Runtime {
-    // TODO: Check this
-    type FullIdentification = Self::ValidatorId;
-    // TODO: Check this
-    type FullIdentificationOf = Self::ValidatorIdOf;
-}
-
-impl pallet_offences::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type IdentificationTuple = pallet_session::historical::IdentificationTuple<Self>;
-    // TODO: Check this
-    type OnOffenceHandler = ();
-}
-
 impl pallet_aura::Config for Runtime {
     type AuthorityId = AuraId;
     type DisabledValidators = ();
     type MaxAuthorities = ConstU32<100_000>;
-    type AllowMultipleBlocksPerSlot = ConstBool<false>;
-    type SlotDuration = pallet_aura::MinimumPeriodTimesTwo<Self>;
+    type AllowMultipleBlocksPerSlot = ConstBool<true>;
+    type SlotDuration = ConstU64<SLOT_DURATION>;
 }
 
 parameter_types! {
@@ -448,52 +308,71 @@ impl pallet_collator_selection::Config for Runtime {
     type WeightInfo = ();
 }
 
-/// Configure the pallet template in pallets/template.
-impl pallet_mmr::Config for Runtime {
-    const INDEXING_PREFIX: &'static [u8] = b"mmr";
-    type Hashing = Keccak256;
-    type LeafData = pallet_mmr::ParentNumberAndHash<Self>;
-    type OnNewRoot = pallet_beefy_mmr_etf::DepositBeefyDigest<Runtime>;
-    type WeightInfo = ();
-    type BlockHashProvider = pallet_mmr::DefaultBlockHashProvider<Runtime>;
+impl pallet_drand::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = pallet_drand::weights::SubstrateWeight<Runtime>;
+    type AuthorityId = pallet_drand::crypto::TestAuthId;
+    type Verifier = pallet_drand::UnsafeSkipVerifier;
+    type UnsignedPriority = ConstU64<{ 1 << 20 }>;
 }
 
-parameter_types! {
-    pub LeafVersion: MmrLeafVersion = MmrLeafVersion::new(0, 0);
-    pub const MaxAuthorities: u32 = 100;
+impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
+where
+    RuntimeCall: From<LocalCall>,
+{
+    fn create_transaction<C: frame_system::offchain::AppCrypto<Self::Public, Self::Signature>>(
+        call: RuntimeCall,
+        public: <Signature as sp_runtime::traits::Verify>::Signer,
+        account: AccountId,
+        nonce: Nonce,
+    ) -> Option<(
+        RuntimeCall,
+        <UncheckedExtrinsic as sp_runtime::traits::Extrinsic>::SignaturePayload,
+    )> {
+        let period = BlockHashCount::get()
+            .checked_next_power_of_two()
+            .map(|c| c / 2)
+            .unwrap_or(2) as u64;
+        let current_block = System::block_number()
+            .saturated_into::<u64>()
+            .saturating_sub(1);
+        let tip = 0;
+        let extra: crate::SignedExtra = (
+            frame_system::CheckNonZeroSender::<Runtime>::new(),
+            frame_system::CheckSpecVersion::<Runtime>::new(),
+            frame_system::CheckTxVersion::<Runtime>::new(),
+            frame_system::CheckGenesis::<Runtime>::new(),
+            frame_system::CheckEra::<Runtime>::from(Era::mortal(period, current_block)),
+            frame_system::CheckNonce::<Runtime>::from(nonce),
+            frame_system::CheckWeight::<Runtime>::new(),
+            pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+            // TODO: Check this
+            cumulus_primitives_storage_weight_reclaim::StorageWeightReclaim::<Runtime>::new(),
+            // TODO: Check this
+            frame_metadata_hash_extension::CheckMetadataHash::<Runtime>::new(false),
+        );
+
+        let raw_payload = SignedPayload::new(call, extra)
+            .map_err(|e| {
+                log::warn!("Unable to create signed payload: {:?}", e);
+            })
+            .ok()?;
+        let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
+        let address = <Runtime as frame_system::Config>::Lookup::unlookup(account);
+        let (call, extra, _) = raw_payload.deconstruct();
+        Some((call, (address, signature.into(), extra)))
+    }
 }
 
-impl pallet_beefy_mmr_etf::Config for Runtime {
-    type LeafVersion = LeafVersion;
-    type BeefyAuthorityToMerkleLeaf = pallet_beefy_mmr_etf::BeefyBlsToEthereum;
-    type LeafExtra = Vec<u8>;
-    type BeefyDataProvider = ();
+impl frame_system::offchain::SigningTypes for Runtime {
+    type Public = <Signature as sp_runtime::traits::Verify>::Signer;
+    type Signature = Signature;
 }
 
-impl pallet_etf::Config for Runtime {
-    type BeefyId = BeefyId;
-    type MaxAuthorities = MaxAuthorities;
-}
-
-parameter_types! {
-    // TODO: get `EpochDuration` right
-    pub const EpochDuration: u64 = 10;
-    pub const SessionsPerEra: u32 = 6;
-    pub const BondingDuration: u32 = 24 * 28;
-    pub const BeefySetIdSessionEntries: u32 = BondingDuration::get() * SessionsPerEra::get();
-    pub const ReportLongevity: u64 =
-        BondingDuration::get() as u64 * SessionsPerEra::get() as u64 * EpochDuration::get();
-}
-
-impl pallet_beefy_etf::Config for Runtime {
-    type BeefyId = BeefyId;
-    type MaxAuthorities = MaxAuthorities;
-    type MaxNominators = ConstU32<0>;
-    type MaxSetIdSessionEntries = BeefySetIdSessionEntries;
-    type OnNewValidatorSet = MmrLeaf;
-    type WeightInfo = ();
-    type KeyOwnerProof = <Historical as KeyOwnerProofSystem<(KeyTypeId, BeefyId)>>::Proof;
-    type EquivocationReportSystem =
-        pallet_beefy_etf::EquivocationReportSystem<Self, Offences, Historical, ReportLongevity>;
-    type RoundCommitmentProvider = Etf;
+impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime
+where
+    RuntimeCall: From<C>,
+{
+    type OverarchingCall = RuntimeCall;
+    type Extrinsic = UncheckedExtrinsic;
 }
