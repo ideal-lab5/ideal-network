@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Parameters
-NODE_URL="http://127.0.0.1:9988"
+NODE_URL="http://127.0.0.1:$1"
 KEY_TYPE="drnd"
 SEED="//Alice"
 PUBLIC_KEY="0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"

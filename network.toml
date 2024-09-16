@@ -1,22 +1,18 @@
 [relaychain]
-default_command = "polkadot"
-chain = "rococo-local"
+chain = "paseo-local"
 
 [[relaychain.nodes]]
 name = "alice"
 validator = true
-ws_port = 9944
 
 [[relaychain.nodes]]
 name = "bob"
 validator = true
-ws_port = 9955
 
 [[parachains]]
 id = 1000
 chain = "dev"
 
 [[parachains.collators]]
-name = "alice"
-ws_port = 9988
+name = "collator-01"
 command = "./target/release/ideal-nw-node"

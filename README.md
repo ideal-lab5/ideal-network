@@ -52,36 +52,36 @@ and run them with:
 
 ## Local Development Chain
 
-🧟 This project uses [Zombienet](https://github.com/paritytech/zombienet) to orchestrate the relaychain and parachain nodes.
-You can grab a [released binary](https://github.com/paritytech/zombienet/releases/latest) or use an [npm version](https://www.npmjs.com/package/@zombienet/cli).
+1. This project uses [POP](https://onpop.io/) to orchestrate the relaychain and parachain nodes.
+If you don't have it yet, install the [`pop` CLI tool](https://learn.onpop.io/v/cli/installing-pop-cli) to run the local development chain.
 
-This project produces a IDN parachain node.
-You still need a relaychain node - you can download the `polkadot`
-(and the accompanying `polkadot-prepare-worker` and `polkadot-execute-worker`)
-binaries from [Polkadot SDK releases](https://github.com/paritytech/polkadot-sdk/releases/latest).
-
-Make sure to bring the `ideal-nw-node` - as well as `polkadot`, `polkadot-prepare-worker`, `polkadot-execute-worker`,
-and `zombienet` - into `PATH` like so:
+2. Run the following command to start a local development IDN chain, with two relaychain nodes and a single parachain collator:
 
 ```sh
-export PATH="./target/release/:$PATH"
+pop up parachain -f ./network.toml
 ```
-
-This way, we can conveniently use them in the following steps.
-
-👥 The following command starts a local development IDN chain, with a single relaychain node and a single parachain collator:
-
-```sh
-zombienet --provider native spawn ./zombienet.toml
-
-# Alternatively, the npm version:
-npx --yes @zombienet/cli --provider native spawn ./zombienet.toml
+It should output something like this:
 ```
+◇  🚀 Network launched successfully - ctrl-c to terminate
+│  ⛓️ paseo-local
+│       alice:
+│         portal: https://polkadot.js.org/apps/?rpc=ws://127.0.0.1:51547#/explorer
+│         logs: tail -f /var/folders/_y/qwer/T/zombie-asdf/alice/alice.log
+│       bob:
+│         portal: https://polkadot.js.org/apps/?rpc=ws://127.0.0.1:51550#/explorer
+│         logs: tail -f /var/folders/_y/qwer/T/zombie-asdf/bob/bob.log
+│  ⛓️ dev: 1000
+│       collator-01:
+│         portal: https://polkadot.js.org/apps/?rpc=ws://127.0.0.1:51553#/explorer
+│         logs: tail -f /var/folders/_y/qwer/T/zombie-asdf/collator-01/collator-01.log
+```
+You can see here that the parachain node `collator-01` is running on `ws://127.0.0.1:51553`.
+Take note of the parachain WS port, in this case `51553`, as you will need it to interact with the parachain in the next step.
 
-Once it's running you should insert the Drand pallet's authority keys. For Alice it can be done by running the following command:
+3. Insert the Drand pallet's authority keys. For Alice it can be done by running the following command:
 ```sh
 chmod +x insert_alice_drand_key.sh
-./insert_alice_drand_key.sh
+./insert_alice_drand_key.sh <PARACHAIN_WS_PORT>
 ```
 
-Then you can interact with the relaychain on `ws://127.0.0.1:9944` and with the parachain on `ws://127.0.0.1:9988`.
+4. Done, you can now interact with the parachain using the "portal" link provided by the `pop` CLI tool (see the output from step 2).

@@ -73,7 +73,7 @@ pub fn development_config() -> ChainSpec {
     ChainSpec::builder(
         runtime::WASM_BINARY.expect("WASM binary was not built, please build it!"),
         Extensions {
-            relay_chain: "rococo-local".into(),
+            relay_chain: "paseo-local".into(),
             // You MUST set this to the correct network!
             para_id: 1000,
         },
@@ -118,7 +118,7 @@ pub fn local_testnet_config() -> ChainSpec {
     ChainSpec::builder(
         runtime::WASM_BINARY.expect("WASM binary was not built, please build it!"),
         Extensions {
-            relay_chain: "rococo-local".into(),
+            relay_chain: "paseo-local".into(),
             // You MUST set this to the correct network!
             para_id: 2000,
         },
@@ -157,7 +157,7 @@ pub fn local_testnet_config() -> ChainSpec {
     .build()
 }
 
-pub fn rococo_config() -> ChainSpec {
+pub fn paseo_config() -> ChainSpec {
     // Give your base currency a unit name and decimal places
     let mut properties = sc_chain_spec::Properties::new();
     properties.insert("tokenSymbol".into(), "IDN".into());
@@ -168,12 +168,12 @@ pub fn rococo_config() -> ChainSpec {
     ChainSpec::builder(
         runtime::WASM_BINARY.expect("WASM binary was not built, please build it!"),
         Extensions {
-            relay_chain: "rococo".into(),
+            relay_chain: "paseo".into(),
             para_id: 4506,
         },
     )
     .with_name("Ideal Network")
-    .with_id("idn_roc")
+    .with_id("idn_pso")
     .with_chain_type(ChainType::Local)
     .with_genesis_config_patch(testnet_genesis(
         // initial collators.
@@ -201,7 +201,7 @@ pub fn rococo_config() -> ChainSpec {
             .into(),
 			4506.into(),
     ))
-    .with_protocol_id("ideal-network-rococo")
+    .with_protocol_id("ideal-network-paseo")
     .with_properties(properties)
     .build()
 }

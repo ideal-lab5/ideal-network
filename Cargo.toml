@@ -7,7 +7,7 @@ resolver = "2"
 
 [workspace.package]
 edition = "2021"
-authors = ["Ideal Labs <driemworks@idealabs.network>"]
+authors = ["Ideal Labs <hello@idealabs.network>"]
 repository = "https://github.com/ideal-lab5/ideal-network"
 homepage = "https://idealabs.network"
 
