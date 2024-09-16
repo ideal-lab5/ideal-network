@@ -143,11 +143,11 @@ pub fn local_testnet_config() -> ChainSpec {
             sr25519::Public::from_str("5DJHx3bH19QC11aTvLj9sD7tAEBZT3ML97veMqwaSHRZFSyX")
                 .unwrap()
                 .into(),
-            sr25519::Public::from_str("5Dcz93bWaQZuvjrgizvnPDSZDefrCFm4R58zsPmChrTe1ywQ")
+            sr25519::Public::from_str("12ZHHNraSBqPNGsCgdynXNGi5GfVtZKCVZsV2gkZFwVACRDh")
                 .unwrap()
                 .into(),
         ],
-        sr25519::Public::from_str("5Dcz93bWaQZuvjrgizvnPDSZDefrCFm4R58zsPmChrTe1ywQ")
+        sr25519::Public::from_str("12ZHHNraSBqPNGsCgdynXNGi5GfVtZKCVZsV2gkZFwVACRDh")
             .unwrap()
             .into(),
         2000.into(),
@@ -169,7 +169,7 @@ pub fn paseo_config() -> ChainSpec {
         runtime::WASM_BINARY.expect("WASM binary was not built, please build it!"),
         Extensions {
             relay_chain: "paseo".into(),
-            para_id: 4506,
+            para_id: 4502,
         },
     )
     .with_name("Ideal Network")
@@ -192,14 +192,14 @@ pub fn paseo_config() -> ChainSpec {
             sr25519::Public::from_str("5DJHx3bH19QC11aTvLj9sD7tAEBZT3ML97veMqwaSHRZFSyX")
                 .unwrap()
                 .into(),
-            sr25519::Public::from_str("5Dcz93bWaQZuvjrgizvnPDSZDefrCFm4R58zsPmChrTe1ywQ")
+            sr25519::Public::from_str("12ZHHNraSBqPNGsCgdynXNGi5GfVtZKCVZsV2gkZFwVACRDh")
                 .unwrap()
                 .into(),
         ],
-        sr25519::Public::from_str("5Dcz93bWaQZuvjrgizvnPDSZDefrCFm4R58zsPmChrTe1ywQ")
+        sr25519::Public::from_str("12ZHHNraSBqPNGsCgdynXNGi5GfVtZKCVZsV2gkZFwVACRDh")
             .unwrap()
             .into(),
-			4506.into(),
+			4502.into(),
     ))
     .with_protocol_id("ideal-network-paseo")
     .with_properties(properties)
