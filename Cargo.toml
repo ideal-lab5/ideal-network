@@ -32,7 +32,7 @@ futures = { version = "0.3.30" }
 ideal-nw-runtime = { path = "runtime", default-features = false }
 
 # Ideal Network
-pallet-drand = { git = "https://github.com/ideal-lab5/pallet-drand", default-features = false }
+pallet-drand = { git = "https://github.com/ideal-lab5/pallets", default-features = false }
 
 # Substrate
 frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "release-crates-io-v1.14.0", default-features = false }
