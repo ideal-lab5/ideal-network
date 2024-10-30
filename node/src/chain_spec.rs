@@ -143,11 +143,11 @@ pub fn local_testnet_config() -> ChainSpec {
             sr25519::Public::from_str("5DJHx3bH19QC11aTvLj9sD7tAEBZT3ML97veMqwaSHRZFSyX")
                 .unwrap()
                 .into(),
-            sr25519::Public::from_str("12ZHHNraSBqPNGsCgdynXNGi5GfVtZKCVZsV2gkZFwVACRDh")
+            sr25519::Public::from_str("5Dcz93bWaQZuvjrgizvnPDSZDefrCFm4R58zsPmChrTe1ywQ")
                 .unwrap()
                 .into(),
         ],
-        sr25519::Public::from_str("12ZHHNraSBqPNGsCgdynXNGi5GfVtZKCVZsV2gkZFwVACRDh")
+        sr25519::Public::from_str("5Dcz93bWaQZuvjrgizvnPDSZDefrCFm4R58zsPmChrTe1ywQ")
             .unwrap()
             .into(),
         2000.into(),
@@ -192,11 +192,11 @@ pub fn paseo_config() -> ChainSpec {
             sr25519::Public::from_str("5DJHx3bH19QC11aTvLj9sD7tAEBZT3ML97veMqwaSHRZFSyX")
                 .unwrap()
                 .into(),
-            sr25519::Public::from_str("12ZHHNraSBqPNGsCgdynXNGi5GfVtZKCVZsV2gkZFwVACRDh")
+            sr25519::Public::from_str("5Dcz93bWaQZuvjrgizvnPDSZDefrCFm4R58zsPmChrTe1ywQ")
                 .unwrap()
                 .into(),
         ],
-        sr25519::Public::from_str("12ZHHNraSBqPNGsCgdynXNGi5GfVtZKCVZsV2gkZFwVACRDh")
+        sr25519::Public::from_str("5Dcz93bWaQZuvjrgizvnPDSZDefrCFm4R58zsPmChrTe1ywQ")
             .unwrap()
             .into(),
 			4502.into(),
