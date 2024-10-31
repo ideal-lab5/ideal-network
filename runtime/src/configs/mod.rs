@@ -314,6 +314,7 @@ impl pallet_drand::Config for Runtime {
     type AuthorityId = pallet_drand::crypto::TestAuthId;
     type Verifier = pallet_drand::UnsafeSkipVerifier;
     type UnsignedPriority = ConstU64<{ 1 << 20 }>;
+	type HttpFetchTimeout = ConstU64<2_000>;
 }
 
 impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
