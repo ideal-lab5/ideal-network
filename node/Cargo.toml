@@ -2,7 +2,7 @@
 name = "ideal-nw-node"
 description = "Ideal Network Node"
 version = "0.1.0"
-license = "MIT-0"
+license.workspace = true
 authors.workspace = true
 homepage.workspace = true
 repository.workspace = true
