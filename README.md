@@ -12,31 +12,50 @@ Use the following command to build the node without launching it:
 cargo build --release
 ```
 
-**Docker**
+### Docker
 
-From the root directory, run:
+#### Build your own image (optional)
 
-``` sh
-docker build .
+You can build your image from the root directory, run:
+
+```sh
+docker build . # for amd64 architecture
+```
+
+Or
+
+```sh
+docker build -f Dockerfile.arm64 . # for arm64 architecture
+```
+
+#### Run the image
+
+If you have built your image, replace `[image]` with the image name you have built.
+If you are using the pre-built image, replace `[image]` with `ideallabs/idn:testnet-0.1.0-amd64` for amd64 architecture or `ideallabs/idn:testnet-0.1.0-arm64` for arm64 architecture.
+
+```sh
+docker run [image] [options]
 ```
 
 ## Testing
 
 **Unit Tests**
 
-``` sh
+```sh
 cargo test
 ```
 
 **Benchmarks**
 
 Build with benchmarks using:
-``` sh
+
+```sh
 cargo build --release --features runtime-benchmarks
 ```
 
 and run them with:
-``` 
+
+```
 # list all benchmarks
 ./target/release/ideal-nw-node benchmark pallet --chain dev --pallet "*" --extrinsic "*" --repeat 0
 # benchmark the drand pallet
@@ -53,14 +72,16 @@ and run them with:
 ## Local Development Chain
 
 1. This project uses [POP](https://onpop.io/) to orchestrate the relaychain and parachain nodes.
-If you don't have it yet, install the [`pop` CLI tool](https://learn.onpop.io/v/cli/installing-pop-cli) to run the local development chain.
+   If you don't have it yet, install the [`pop` CLI tool](https://learn.onpop.io/v/cli/installing-pop-cli) to run the local development chain.
 
 2. Run the following command to start a local development IDN chain, with two relaychain nodes and a single parachain collator:
 
 ```sh
 pop up parachain -f ./network.toml
 ```
+
 It should output something like this:
+
 ```
 ◇  🚀 Network launched successfully - ctrl-c to terminate
 │  ⛓️ paseo-local
@@ -75,10 +96,12 @@ It should output something like this:
 │         portal: https://polkadot.js.org/apps/?rpc=ws://127.0.0.1:51553#/explorer
 │         logs: tail -f /var/folders/_y/qwer/T/zombie-asdf/collator-01/collator-01.log
 ```
+
 You can see here that the parachain node `collator-01` is running on `ws://127.0.0.1:51553`.
 Take note of the parachain WS port, in this case `51553`, as you will need it to interact with the parachain in the next step.
 
 3. Insert the Drand pallet's authority keys. For Alice it can be done by running the following command:
+
 ```sh
 chmod +x insert_alice_drand_key.sh
 ./insert_alice_drand_key.sh <PARACHAIN_WS_PORT>
