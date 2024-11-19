@@ -11,7 +11,7 @@ authors = ["Ideal Labs <hello@idealabs.network>"]
 repository = "https://github.com/ideal-lab5/ideal-network"
 homepage = "https://idealabs.network"
 license = "Apache-2.0"
-version = "0.1.1"
+version = "0.1.2"
 
 [workspace.lints.rust]
 suspicious_double_ref_op = { level = "allow", priority = 2 }

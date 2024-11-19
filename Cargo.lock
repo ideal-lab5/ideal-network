@@ -4347,7 +4347,7 @@ dependencies = [
 
 [[package]]
 name = "ideal-nw-runtime"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-parachain-system",
