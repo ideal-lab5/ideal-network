@@ -38,6 +38,8 @@ frame-try-runtime = { optional = true, workspace = true }
 pallet-aura.workspace = true
 pallet-authorship.workspace = true
 pallet-balances.workspace = true
+pallet-beefy-etf.workspace = true
+pallet-beefy-mmr-etf.workspace = true
 pallet-drand.workspace = true
 pallet-message-queue.workspace = true
 pallet-session.workspace = true
@@ -48,6 +50,7 @@ pallet-transaction-payment-rpc-runtime-api.workspace = true
 sp-api.workspace = true
 sp-block-builder.workspace = true
 sp-consensus-aura.workspace = true
+sp-consensus-beefy-etf = { workspace = true , features = ["bls-experimental"] }
 sp-core.workspace = true
 sp-genesis-builder.workspace = true
 sp-inherents.workspace = true

@@ -299,6 +299,10 @@ impl pallet_collator_selection::Config for Runtime {
 	type WeightInfo = ();
 }
 
+parameter_types! {
+	pub const ApiEndpoint: &'static str = "https://drand.cloudflare.com";
+}
+
 impl pallet_drand::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type WeightInfo = pallet_drand::weights::SubstrateWeight<Runtime>;
@@ -306,6 +310,7 @@ impl pallet_drand::Config for Runtime {
 	type Verifier = pallet_drand::UnsafeSkipVerifier;
 	type UnsignedPriority = ConstU64<{ 1 << 20 }>;
 	type HttpFetchTimeout = ConstU64<2_000>;
+	type ApiEndpoint = ApiEndpoint;
 }
 
 impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
