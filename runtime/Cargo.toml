@@ -50,7 +50,7 @@ pallet-transaction-payment-rpc-runtime-api.workspace = true
 sp-api.workspace = true
 sp-block-builder.workspace = true
 sp-consensus-aura.workspace = true
-sp-consensus-beefy-etf = { workspace = true , features = ["bls-experimental"] }
+sp-consensus-beefy-etf.workspace = true
 sp-core.workspace = true
 sp-genesis-builder.workspace = true
 sp-inherents.workspace = true
