@@ -55,8 +55,21 @@ use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerH
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_keystore::KeystorePtr;
 
+/// Host runctions required for Substrate and Arkworks
+#[cfg(not(feature = "runtime-benchmarks"))]
+pub type HostFunctions =
+	(ParachainHostFunctions, sp_crypto_ec_utils::bls12_381::host_calls::HostFunctions);
+
+/// Host runctions required for Substrate and Arkworks
+#[cfg(feature = "runtime-benchmarks")]
+pub type HostFunctions = (
+	ParachainHostFunctions,
+	sp_crypto_ec_utils::bls12_381::host_calls::HostFunctions,
+	frame_benchmarking::benchmarking::HostFunctions,
+);
+
 #[docify::export(wasm_executor)]
-type ParachainExecutor = WasmExecutor<ParachainHostFunctions>;
+type ParachainExecutor = WasmExecutor<HostFunctions>;
 
 type ParachainClient = TFullClient<Block, RuntimeApi, ParachainExecutor>;
 
