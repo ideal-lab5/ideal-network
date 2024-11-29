@@ -16,3 +16,4 @@ chain = "dev"
 [[parachains.collators]]
 name = "collator-01"
 command = "./target/release/ideal-nw-node"
+rpc_port = 1234
