@@ -105,3 +105,4 @@ chmod +x insert_alice_drand_key.sh
 ```
 
 4. Done, you can now interact with the parachain using this link https://polkadot.js.org/apps/?rpc=ws://127.0.0.1:1234#/explorer.
+Bear in mind that you may need to wait a few seconds for the block production to start.
