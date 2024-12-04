@@ -299,13 +299,20 @@ impl pallet_collator_selection::Config for Runtime {
 	type WeightInfo = ();
 }
 
+parameter_types! {
+	pub const UnsignedPriority: u64 = 1 << 20;
+	pub const HttpFetchTimeout: u64 = 2_000;
+	pub const ApiEndpoint: &'static str = "https://drand.cloudflare.com";
+}
+
 impl pallet_drand::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type WeightInfo = pallet_drand::weights::SubstrateWeight<Runtime>;
 	type AuthorityId = pallet_drand::crypto::TestAuthId;
-	type Verifier = pallet_drand::UnsafeSkipVerifier;
-	type UnsignedPriority = ConstU64<{ 1 << 20 }>;
-	type HttpFetchTimeout = ConstU64<2_000>;
+	type Verifier = pallet_drand::verifier::UnsafeSkipVerifier;
+	type UnsignedPriority = UnsignedPriority;
+	type HttpFetchTimeout = HttpFetchTimeout;
+	type ApiEndpoint = ApiEndpoint;
 }
 
 impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
