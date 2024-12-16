@@ -23,8 +23,8 @@ docify = { version = "0.2.8" }
 hex-literal = { version = "0.4.1", default-features = false }
 log = { version = "0.4.21", default-features = false }
 scale-info = { version = "2.11.1", default-features = false }
-serde = { version = "1.0.197", default-features = false }
-serde_json = { version = "1.0.114", default-features = false }
+serde = { version = "=1.0.215", default-features = false }
+serde_json = { version = "=1.0.128", default-features = false }
 smallvec = { version = "1.11.0", default-features = false }
 thiserror = { version = "1.0.48" }
 jsonrpsee = { version = "0.23.2" }
