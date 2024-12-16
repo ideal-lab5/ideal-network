@@ -4353,7 +4353,7 @@ dependencies = [
 
 [[package]]
 name = "ideal-nw-runtime"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-parachain-system",
@@ -6955,7 +6955,7 @@ dependencies = [
 [[package]]
 name = "pallet-drand"
 version = "0.0.1"
-source = "git+https://github.com/ideal-lab5/idn-sdk#7ea5ef08cf138cb571304f21bb389fbdcd05bd41"
+source = "git+https://github.com/ideal-lab5/idn-sdk#e1739dfef54f8126624afee1a6b988fa51e6cb89"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
