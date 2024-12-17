@@ -11,31 +11,34 @@ authors = ["Ideal Labs <hello@idealabs.network>"]
 repository = "https://github.com/ideal-lab5/ideal-network"
 homepage = "https://idealabs.network"
 license = "Apache-2.0"
-version = "0.1.4"
+version = "0.1.5"
 
 [workspace.lints.rust]
 suspicious_double_ref_op = { level = "allow", priority = 2 }
 
 [workspace.dependencies]
-clap = { version = "4.5.3" }
-codec = { version = "3.6.12", default-features = false, package = "parity-scale-codec" }
-docify = { version = "0.2.8" }
-hex-literal = { version = "0.4.1", default-features = false }
+clap = { version = "4.5.3", features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3.6.12", default-features = false, features = [
+    "derive",
+] }
+docify = "0.2.8"
+hex-literal = "0.4.1"
 log = { version = "0.4.21", default-features = false }
-scale-info = { version = "2.11.1", default-features = false }
-serde = { version = "=1.0.215", default-features = false }
-serde_json = { version = "=1.0.128", default-features = false }
-smallvec = { version = "1.11.0", default-features = false }
-thiserror = { version = "1.0.48" }
-jsonrpsee = { version = "0.23.2" }
-futures = { version = "0.3.30" }
+scale-info = { version = "2.11.1", default-features = false, features = [
+    "derive",
+] }
+serde = "1.0.214"
+serde_json = "1.0.132"
+smallvec = "1.11.2"
+thiserror = "1.0.48"
+jsonrpsee = "0.23.2"
+futures = "0.3.30" 
 
 # Local
-ideal-nw-runtime = { path = "runtime", default-features = false }
+ideal-nw-runtime = { path = "runtime" }
 
 # Ideal Network
-# pallet-drand = { git = "https://github.com/ideal-lab5/idn-sdk", default-features = false }
-pallet-drand = { path = "../idn-sdk/pallets/drand", default-features = false }
+pallet-drand = { git = "https://github.com/ideal-lab5/idn-sdk", default-features = false }
 
 # Substrate
 frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk.git", tag = "polkadot-stable2407-5", default-features = false }

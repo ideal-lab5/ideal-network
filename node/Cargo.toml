@@ -1,7 +1,7 @@
 [package]
 name = "ideal-nw-node"
 description = "Ideal Network Node"
-version = "0.1.0"
+version = "0.1.1"
 license.workspace = true
 authors.workspace = true
 homepage.workspace = true
@@ -11,14 +11,14 @@ publish = false
 build = "build.rs"
 
 [dependencies]
-clap = { features = ["derive"], workspace = true }
-log = { workspace = true, default-features = true }
-codec = { workspace = true, default-features = true }
-serde = { features = ["derive"], workspace = true, default-features = true }
-jsonrpsee = { features = ["server"], workspace = true }
-futures = { workspace = true }
-serde_json = { workspace = true, default-features = true }
-docify = { workspace = true }
+clap.workspace = true
+log.workspace = true
+codec.workspace = true
+serde.workspace = true
+jsonrpsee.workspace = true
+futures.workspace = true
+serde_json.workspace = true
+docify.workspace = true
 ideal-nw-runtime.workspace = true
 frame-benchmarking.workspace = true
 frame-benchmarking.default-features = true
@@ -83,7 +83,7 @@ substrate-frame-rpc-system.workspace = true
 substrate-frame-rpc-system.default-features = true
 prometheus-endpoint.workspace = true
 prometheus-endpoint.default-features = true
-polkadot-cli = { features = ["rococo-native"], workspace = true, default-features = true }
+polkadot-cli = { features = ["rococo-native"], workspace = true }
 polkadot-primitives.workspace = true
 polkadot-primitives.default-features = true
 xcm.workspace = true
@@ -105,7 +105,7 @@ cumulus-primitives-parachain-inherent.workspace = true
 cumulus-primitives-parachain-inherent.default-features = true
 cumulus-relay-chain-interface.workspace = true
 cumulus-relay-chain-interface.default-features = true
-color-print = { workspace = true }
+color-print.workspace = true
 
 [build-dependencies]
 substrate-build-script-utils.workspace = true
